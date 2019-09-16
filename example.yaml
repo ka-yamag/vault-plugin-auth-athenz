@@ -1,0 +1,10 @@
+---
+athenz:
+  url: localhost:4443/zts/v1
+  refreshDuratuon: 6h
+  domain:
+    - sample.domain
+    - sample
+  policy:
+    resource: vault
+    action: access
