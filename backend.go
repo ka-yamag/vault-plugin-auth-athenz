@@ -22,7 +22,7 @@ func SetConfigPath(path string) {
 	confPath = path
 }
 
-type backend struct {
+type athenzAuthBackend struct {
 	*framework.Backend
 
 	l *sync.RWMutex
@@ -33,14 +33,14 @@ type backend struct {
 
 // Factory is used by framework
 func Factory(ctx context.Context, c *logical.BackendConfig) (logical.Backend, error) {
-	if p, ok := c.Config["--config-file"]; ok {
-		confPath = p
-	}
-	if confPath == "" {
-		confPath = defaultConfigPath
-	}
+	// if p, ok := c.Config["--config-file"]; ok {
+	//   confPath = p
+	// }
+	// if confPath == "" {
+	//   confPath = defaultConfigPath
+	// }
 
-	b, err := Backend()
+	b, err := backend()
 	if err != nil {
 		return nil, err
 	}
@@ -52,13 +52,13 @@ func Factory(ctx context.Context, c *logical.BackendConfig) (logical.Backend, er
 }
 
 // Backend is ...
-func Backend() (*backend, error) {
-	var b backend
-	b.updaterCtx, b.updaterCtxCancel = context.WithCancel(context.Background())
+func backend() (*athenzAuthBackend, error) {
+	var b athenzAuthBackend
+	// b.updaterCtx, b.updaterCtxCancel = context.WithCancel(context.Background())
 
-	if confPath == "" {
-		confPath = defaultConfigPath
-	}
+	// if confPath == "" {
+	//   confPath = defaultConfigPath
+	// }
 
 	// conf, err := config.NewConfig(confPath)
 	// if err != nil {
@@ -76,14 +76,14 @@ func Backend() (*backend, error) {
 		Help:        backendHelp,
 		BackendType: logical.TypeCredential,
 		// AuthRenew:   b.pathAuthRenew,
-		// PathsSpecial: &logical.Paths{
-		//   Unauthenticated: []string{"login"},
-		// },
+		PathsSpecial: &logical.Paths{
+			Unauthenticated: []string{"login"},
+		},
 		Paths: framework.PathAppend(
 			[]*framework.Path{
 				pathConfigClient(&b),
 				// pathLogin(&b),
-				// pathListServices(&b),
+				pathListClients(&b),
 			},
 		),
 		Clean: b.cleanup,
@@ -94,7 +94,7 @@ func Backend() (*backend, error) {
 	return &b, nil
 }
 
-func (b *backend) cleanup(_ context.Context) {
+func (b *athenzAuthBackend) cleanup(_ context.Context) {
 	b.l.Lock()
 	if b.updaterCtxCancel != nil {
 		b.updaterCtxCancel()
