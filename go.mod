@@ -1,4 +1,4 @@
-module vault-plugin-auth-athenz
+module github.com/katyamag/vault-plugin-auth-athenz
 
 go 1.12
 
