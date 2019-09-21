@@ -22,7 +22,7 @@ func SetConfigPath(path string) {
 	confPath = path
 }
 
-type athenzAuthBackend struct {
+type backend struct {
 	*framework.Backend
 
 	l *sync.RWMutex
@@ -40,7 +40,7 @@ func Factory(ctx context.Context, c *logical.BackendConfig) (logical.Backend, er
 		confPath = defaultConfigPath
 	}
 
-	b, err := backend()
+	b, err := Backend()
 	if err != nil {
 		return nil, err
 	}
@@ -51,8 +51,9 @@ func Factory(ctx context.Context, c *logical.BackendConfig) (logical.Backend, er
 	return b, nil
 }
 
-func backend() (*athenzAuthBackend, error) {
-	var b athenzAuthBackend
+// Backend is ...
+func Backend() (*backend, error) {
+	var b backend
 	b.updaterCtx, b.updaterCtxCancel = context.WithCancel(context.Background())
 
 	if confPath == "" {
@@ -71,29 +72,29 @@ func backend() (*athenzAuthBackend, error) {
 	// // Start updater
 	// athenz.GetUpdater().Run(b.updaterCtx)
 
-	// b.Backend = &framework.Backend{
-	//   Help:        backendHelp,
-	//   BackendType: logical.TypeCredential,
-	//   AuthRenew:   b.pathAuthRenew,
-	//   PathsSpecial: &logical.Paths{
-	//     Unauthenticated: []string{"login"},
-	//   },
-	//   Paths: framework.PathAppend(
-	//     []*framework.Path{
-	//       pathServices(&b),
-	//       pathLogin(&b),
-	//       pathListServices(&b),
-	//     },
-	//   ),
-	//   Clean: b.cleanup,
-	// }
+	b.Backend = &framework.Backend{
+		Help:        backendHelp,
+		BackendType: logical.TypeCredential,
+		// AuthRenew:   b.pathAuthRenew,
+		// PathsSpecial: &logical.Paths{
+		//   Unauthenticated: []string{"login"},
+		// },
+		Paths: framework.PathAppend(
+			[]*framework.Path{
+				pathConfigClient(&b),
+				// pathLogin(&b),
+				// pathListServices(&b),
+			},
+		),
+		Clean: b.cleanup,
+	}
 
 	b.l = &sync.RWMutex{}
 
 	return &b, nil
 }
 
-func (b *athenzAuthBackend) cleanup(_ context.Context) {
+func (b *backend) cleanup(_ context.Context) {
 	b.l.Lock()
 	if b.updaterCtxCancel != nil {
 		b.updaterCtxCancel()
