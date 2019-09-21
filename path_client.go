@@ -9,13 +9,13 @@ import (
 	"github.com/hashicorp/vault/sdk/framework"
 	"github.com/hashicorp/vault/sdk/helper/policyutil"
 	"github.com/hashicorp/vault/sdk/logical"
+
+	"github.com/katyamag/vault-plugin-auth-athenz/pkg/logger"
 )
 
-const (
-	pathAthenzHelpSyn = `
-Manage the athenz principal used for authentication.
-	`
-)
+var log = logger.GetLogger()
+
+const pathPrefix = "clients/"
 
 // AthenzEntry is used to report that the user requests to read athenz/ path
 type AthenzEntry struct {
@@ -26,71 +26,61 @@ type AthenzEntry struct {
 	MaxTTL   time.Duration
 }
 
-func pathConfigClient(b *backend) *framework.Path {
+func pathConfigClient(b *athenzAuthBackend) *framework.Path {
 	return &framework.Path{
-		Pattern: "client/" + framework.GenericNameRegex("name"),
+		Pattern: pathPrefix + framework.GenericNameRegex("name"),
 		Fields: map[string]*framework.FieldSchema{
 			"name": {
 				Type:        framework.TypeString,
-				Default:     "",
 				Description: "service name",
 			},
 
 			"role": {
 				Type:        framework.TypeString,
-				Default:     "",
 				Description: "Athenz Role name",
 			},
 
 			"policies": {
 				Type:        framework.TypeCommaStringSlice,
-				Default:     "",
 				Description: `Comma-separated list of policies.`,
 			},
 
 			"ttl": {
 				Type:        framework.TypeDurationSecond,
-				Default:     "",
 				Description: `TTL for tokens issued by this backend. Defaults to system/backend default TTL time.`,
 			},
 
 			"lease": {
 				Type:        framework.TypeInt,
-				Default:     "",
 				Description: `Deprecated: use "ttl" instead. TTL time in seconds. Defaults to system/backend default TTL.`,
 			},
 
 			"max_ttl": {
-				Type:    framework.TypeDurationSecond,
-				Default: "",
-				Description: `Duration in either an integer number of seconds (3600) or an integer time unit (60m)
-				after which the issued token can no longer be renewed.`,
+				Type:        framework.TypeDurationSecond,
+				Description: `Duration in either an integer number of seconds (3600) or an integer time unit (60m) after which the issued token can no longer be renewed.`,
 			},
 		},
 
-		Operations: map[logical.Operation]framework.OperationHandler{
-			logical.CreateOperation: &framework.PathOperation{
-				Callback: b.pathConfigClientCreateUpdate,
-			},
-			logical.ReadOperation: &framework.PathOperation{
-				Callback: b.pathConfigClientRead,
-			},
+		Callbacks: map[logical.Operation]framework.OperationFunc{
+			logical.DeleteOperation: b.pathClientDelete,
+			logical.ReadOperation:   b.pathClientRead,
+			logical.UpdateOperation: b.pathClientWrite,
+			logical.CreateOperation: b.pathClientWrite,
 		},
 
-		// Callbacks: map[logical.Operation]framework.OperationFunc{
-		//   // logical.DeleteOperation: b.pathServiceDelete,
-		//   // logical.ReadOperation:   b.pathServiceRead,
-		//   // logical.UpdateOperation: b.pathServiceWrite,
-		// },
-		HelpSynopsis: pathAthenzHelpSyn,
+		// HelpSynopsis: pathAthenzHelpSyn,
 	}
 }
 
-func (b *backend) pathConfigClientCreateUpdate(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+func (b *athenzAuthBackend) pathClientWrite(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+	log.Debug("pathConfigClient ----")
+
 	name := strings.ToLower(d.Get("name").(string))
 	if name == "" {
 		return logical.ErrorResponse("name must be set"), nil
 	}
+
+	log.Debug(name)
 
 	resp := logical.Response{}
 
@@ -112,6 +102,8 @@ func (b *backend) pathConfigClientCreateUpdate(ctx context.Context, req *logical
 		return logical.ErrorResponse("ttl cannot be negative"), nil
 	}
 
+	log.Debug("ttl ---------------")
+
 	// Parse the max_ttl
 	systemMaxTTL := b.System().MaxLeaseTTL()
 	maxTTL := time.Duration(d.Get("max_ttl").(int)) * time.Second
@@ -129,8 +121,12 @@ func (b *backend) pathConfigClientCreateUpdate(ctx context.Context, req *logical
 		return logical.ErrorResponse("ttl should be shorter than max_ttl"), nil
 	}
 
+	log.Debug("maxttl ---------------")
+
 	// Parse vault policies
 	policies := policyutil.ParsePolicies(d.Get("policies"))
+
+	log.Debug("policy ---------------")
 
 	// Parse roletoken
 	// parsedRoleToken, err := athenz.GetUpdater().VerifyRoleToken(ctx, d.Get("roletoken").(string))
@@ -139,7 +135,10 @@ func (b *backend) pathConfigClientCreateUpdate(ctx context.Context, req *logical
 	// }
 
 	// TODO: parse role name
-	role := d.Get("roletoken").(string)
+	role := d.Get("role").(string)
+
+	log.Debug("role ---------------")
+	log.Debug(role)
 
 	athenzEntry := &AthenzEntry{
 		Name:     name,
@@ -150,7 +149,7 @@ func (b *backend) pathConfigClientCreateUpdate(ctx context.Context, req *logical
 	}
 
 	// Store athenz entry
-	entry, err := logical.StorageEntryJSON("clients/"+name, athenzEntry)
+	entry, err := logical.StorageEntryJSON(pathPrefix+name, athenzEntry)
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +164,7 @@ func (b *backend) pathConfigClientCreateUpdate(ctx context.Context, req *logical
 	return &resp, nil
 }
 
-func (b *backend) pathConfigClientRead(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+func (b *athenzAuthBackend) pathClientRead(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
 	athenz, err := b.athenz(ctx, req.Storage, strings.ToLower(d.Get("name").(string)))
 	if err != nil {
 		return nil, err
@@ -185,12 +184,12 @@ func (b *backend) pathConfigClientRead(ctx context.Context, req *logical.Request
 	}, nil
 }
 
-func (b *backend) athenz(ctx context.Context, s logical.Storage, name string) (*AthenzEntry, error) {
+func (b *athenzAuthBackend) athenz(ctx context.Context, s logical.Storage, name string) (*AthenzEntry, error) {
 	if name == "" {
 		return nil, fmt.Errorf("missing name")
 	}
 
-	entry, err := s.Get(ctx, "clients/"+strings.ToLower(name))
+	entry, err := s.Get(ctx, pathPrefix+strings.ToLower(name))
 	if err != nil {
 		return nil, err
 	}
@@ -204,4 +203,12 @@ func (b *backend) athenz(ctx context.Context, s logical.Storage, name string) (*
 	}
 
 	return &result, nil
+}
+
+func (b *athenzAuthBackend) pathClientDelete(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+	err := req.Storage.Delete(ctx, pathPrefix+strings.ToLower(d.Get("name").(string)))
+	if err != nil {
+		return nil, err
+	}
+	return nil, nil
 }

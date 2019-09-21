@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/vault/api"
 	"github.com/hashicorp/vault/sdk/plugin"
+	athenzauth "github.com/katyamag/vault-plugin-auth-athenz"
 )
 
 func main() {
@@ -17,8 +18,8 @@ func main() {
 	tlsProviderFunc := api.VaultPluginTLSProvider(tlsConfig)
 
 	err := plugin.Serve(&plugin.ServeOpts{
-		// BackendFactoryFunc: jwtauth.Factory,
-		TLSProviderFunc: tlsProviderFunc,
+		BackendFactoryFunc: athenzauth.Factory,
+		TLSProviderFunc:    tlsProviderFunc,
 	})
 	if err != nil {
 		log.Println(err)
