@@ -1,1 +1,2 @@
-cmd/vault-plugin-auth-athenz/vault-plugin-auth-athenz
+cmd/vault-plugin-auth-athenz/vault-plugin-auth-athenza
+*.envrc
