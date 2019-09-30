@@ -7,38 +7,40 @@ BIN_NAME="vault-plugin-auth-athenz"
 
 if [ "$1" = "build" ]; then
   SHA256_PREFIX="sha256sum"
-  PLUGIN_DIR="/tmp/vault/plugin/"
-  CONFIG_FILE_PATH="/tmp/vault/plugin/athenz_plugin.yaml"
-  go build $GOPATH/src/github.com/katyamag/${BIN_NAME}/cmd/${BIN_NAME}
-  mv vault-plugin-auth-athenz $PLUGIN_DIR
+  PLUGIN_DIR="/private/tmp/vault/plugin/"
+  CONFIG_FILE_PATH="/private/tmp/vault/plugin/athenz_plugin.yaml"
+
+  cd ..
+  make
+  cp ./target/darwin/vault-plugin-auth-athenz $PLUGIN_DIR
 fi
 
-# unameOut=$(uname -s)
-# case "${unameOut}" in
-#   Linux*)
-#     SHA256_PREFIX="sha256sum"
-#     PLUGIN_DIR="${GOBIN}"
-#     CONFIG_FILE_PATH="/tmp/vault/plugin/athenz_plugin.yaml"
-#     go get github.com/katyamag/vault-plugin-auth-athenz/cmd/vault-plugin-auth-athenz;;
+unameOut=$(uname -s)
+case "${unameOut}" in
+  Linux*)
+    SHA256_PREFIX="sha256sum";;
+    # PLUGIN_DIR="${GOBIN}"
+    # CONFIG_FILE_PATH="/tmp/vault/plugin/athenz_plugin.yaml"
+    # go get github.com/katyamag/vault-plugin-auth-athenz/cmd/vault-plugin-auth-athenz;;
 
-#   Darwin*)
-#     SHA256_PREFIX="shasum -a 256"
-#     PLUGIN_DIR="/private/tmp/vault/plugin"
-#     CONFIG_FILE_PATH="${GOPATH}/src/ghe.corp.yahoo.co.jp/katyamag/vault-plugin-auth-athenz/athenz_plugin.yaml"
+  Darwin*)
+    SHA256_PREFIX="shasum -a 256";;
+    # PLUGIN_DIR="/private/tmp/vault/plugin"
+    # CONFIG_FILE_PATH="${GOPATH}/src/ghe.corp.yahoo.co.jp/katyamag/vault-plugin-auth-athenz/athenz_plugin.yaml"
 
-#     if [ ! -e $PLUGIN_DIR ]; then
-#       mkdir -p $PLUGIN_DIR
-#     fi
+    # if [ ! -e $PLUGIN_DIR ]; then
+    #   mkdir -p $PLUGIN_DIR
+    # fi
 
-#     if [ -e $PLUGIN_DIR/$BIN_NAME ]; then
-#       rm $PLUGIN_DIR/$BIN_NAME
-#     fi
+    # if [ -e $PLUGIN_DIR/$BIN_NAME ]; then
+    #   rm $PLUGIN_DIR/$BIN_NAME
+    # fi
 
-#     echo "[+] build go binary ----"
-#     cd ../cmd/$BIN_NAME
-#     go build
-#     mv $BIN_NAME $PLUGIN_DIR;;
-# esac
+    # echo "[+] build go binary ----"
+    # cd ../cmd/$BIN_NAME
+    # go build
+    # mv $BIN_NAME $PLUGIN_DIR;;
+esac
 
 # disable and delete plugin
 echo "[+] disable and delete ----"

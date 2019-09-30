@@ -31,10 +31,8 @@ func TestNewConfig(t *testing.T) {
 			data: `---
 athenz:
   url: localhost:4443/zts/v1
-  refreshDuration: 6h
-  domain:
-    - sample.domain
-    - sample
+  policyRefreshDuration: 6h
+  domain: sample.domain
   policy:
     resource: vault
     action: access
@@ -42,12 +40,9 @@ athenz:
 			path: configPath,
 			expected: &Config{
 				Athenz: Athenz{
-					URL:             "localhost:4443/zts/v1",
-					RefreshDuration: "6h",
-					Domain: []string{
-						"sample.domain",
-						"sample",
-					},
+					URL:                   "localhost:4443/zts/v1",
+					PolicyRefreshDuration: "6h",
+					Domain:                "sample.domain",
 					Policy: Policy{
 						Resource: "vault",
 						Action:   "access",

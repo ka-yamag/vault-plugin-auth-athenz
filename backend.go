@@ -6,6 +6,8 @@ import (
 
 	"github.com/hashicorp/vault/sdk/framework"
 	"github.com/hashicorp/vault/sdk/logical"
+	"github.com/katyamag/vault-plugin-auth-athenz/pkg/athenz"
+	"github.com/katyamag/vault-plugin-auth-athenz/pkg/config"
 )
 
 const (
@@ -33,12 +35,12 @@ type athenzAuthBackend struct {
 
 // Factory is used by framework
 func Factory(ctx context.Context, c *logical.BackendConfig) (logical.Backend, error) {
-	// if p, ok := c.Config["--config-file"]; ok {
-	//   confPath = p
-	// }
-	// if confPath == "" {
-	//   confPath = defaultConfigPath
-	// }
+	if p, ok := c.Config["--config-file"]; ok {
+		confPath = p
+	}
+	if confPath == "" {
+		confPath = defaultConfigPath
+	}
 
 	b, err := backend()
 	if err != nil {
@@ -54,23 +56,23 @@ func Factory(ctx context.Context, c *logical.BackendConfig) (logical.Backend, er
 // Backend is ...
 func backend() (*athenzAuthBackend, error) {
 	var b athenzAuthBackend
-	// b.updaterCtx, b.updaterCtxCancel = context.WithCancel(context.Background())
+	b.updaterCtx, b.updaterCtxCancel = context.WithCancel(context.Background())
 
-	// if confPath == "" {
-	//   confPath = defaultConfigPath
-	// }
+	if confPath == "" {
+		confPath = defaultConfigPath
+	}
 
-	// conf, err := config.NewConfig(confPath)
-	// if err != nil {
-	//   return nil, err
-	// }
+	conf, err := config.NewConfig(confPath)
+	if err != nil {
+		return nil, err
+	}
 
-	// if err := athenz.NewAthenzUpdaterDaemon(conf.Athenz); err != nil {
-	//   return nil, err
-	// }
+	if err := athenz.NewValidator(b.updaterCtx, conf.Athenz); err != nil {
+		return nil, err
+	}
 
-	// // Start updater
-	// athenz.GetUpdater().Run(b.updaterCtx)
+	// Start validator
+	athenz.GetValidator().Run(b.updaterCtx)
 
 	b.Backend = &framework.Backend{
 		Help:        backendHelp,
@@ -82,7 +84,7 @@ func backend() (*athenzAuthBackend, error) {
 		Paths: framework.PathAppend(
 			[]*framework.Path{
 				pathConfigClient(&b),
-				// pathLogin(&b),
+				pathLogin(&b),
 				pathListClients(&b),
 			},
 		),

@@ -2,9 +2,8 @@
 athenz:
   url: localhost:4443/zts/v1
   policyrhRefreshDuratuon: 6h
-  domain:
-    - sample.domain
-    - sample
+  hdr: Athenz-Principal-Auth
+  domain: sample.domain
   policy:
     resource: vault
     action: access
