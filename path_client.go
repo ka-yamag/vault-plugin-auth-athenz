@@ -128,15 +128,8 @@ func (b *athenzAuthBackend) pathClientWrite(ctx context.Context, req *logical.Re
 
 	log.Debug("policy ---------------")
 
-	// Parse roletoken
-	// parsedRoleToken, err := athenz.GetUpdater().VerifyRoleToken(ctx, d.Get("roletoken").(string))
-	// if err != nil {
-	//   return logical.ErrorResponse(fmt.Sprintf("could not parse roletoken: %s", err)), nil
-	// }
-
 	// TODO: parse role name
 	role := d.Get("role").(string)
-
 	log.Debug("role ---------------")
 	log.Debug(role)
 

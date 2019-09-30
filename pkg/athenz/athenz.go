@@ -3,11 +3,11 @@ package athenz
 import (
 	"context"
 
-	"github.com/yahoojapan/athenz-authorizer/role"
+	"github.com/yahoo/athenz/clients/go/zts"
 )
 
 // Athenz is interface for athenz setting or daemon
 type Athenz interface {
 	Run(context.Context)
-	VerifyToken(context.Context, string) (*role.RoleToken, error)
+	VerifyToken(context.Context, string, string) (*zts.RoleToken, error)
 }

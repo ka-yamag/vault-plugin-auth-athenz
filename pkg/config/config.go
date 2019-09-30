@@ -13,10 +13,11 @@ type Config struct {
 
 // Athenz is the struct of basic infomation for athenz
 type Athenz struct {
-	URL                   string   `yaml:"url"`
-	PolicyRefreshDuration string   `yaml:"policyRefreshDuration"`
-	Domain                []string `yaml:"domain"`
-	Policy                Policy   `yaml:"policy"`
+	URL                   string `yaml:"url"`
+	PolicyRefreshDuration string `yaml:"policyRefreshDuration"`
+	Domain                string `yaml:"domain"`
+	Policy                Policy `yaml:"policy"`
+	Hdr                   string `yaml:"hdr"`
 }
 
 // Policy is the struct for policy to validate access

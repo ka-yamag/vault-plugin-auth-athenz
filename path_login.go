@@ -3,10 +3,12 @@ package athenzauth
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/hashicorp/vault/sdk/framework"
 	"github.com/hashicorp/vault/sdk/logical"
+	"github.com/katyamag/vault-plugin-auth-athenz/pkg/athenz"
 )
 
 func pathLogin(b *athenzAuthBackend) *framework.Path {
@@ -16,7 +18,7 @@ func pathLogin(b *athenzAuthBackend) *framework.Path {
 			"name": &framework.FieldSchema{
 				Type: framework.TypeString,
 			},
-			"ntoken": &framework.FieldSchema{
+			"token": &framework.FieldSchema{
 				Type: framework.TypeString,
 			},
 		},
@@ -32,14 +34,19 @@ func (b *athenzAuthBackend) pathAuthLogin(ctx context.Context, req *logical.Requ
 		return nil, errors.New("missing name")
 	}
 
-	roletoken := d.Get("roletoken").(string)
+	roletoken := d.Get("token").(string)
 	if roletoken == "" {
-		return nil, errors.New("missing roletoken")
+		return nil, errors.New("missing athenz token")
 	}
 
 	athenzEntry, err := b.athenz(ctx, req.Storage, name)
 	if err != nil {
 		return nil, err
+	}
+
+	_, err = athenz.GetValidator().VerifyToken(ctx, d.Get("token").(string), athenzEntry.Role)
+	if err != nil {
+		return logical.ErrorResponse(fmt.Sprintf("could not parse roletoken: %s", err)), nil
 	}
 
 	// rt, err := athenz.GetUpdater().VerifyRoleToken(b.updaterCtx, roletoken)
@@ -64,6 +71,7 @@ func (b *athenzAuthBackend) pathAuthLogin(ctx context.Context, req *logical.Requ
 	// if count < len(athenzEntry.AthenzRoles) {
 	//   return nil, logical.ErrPermissionDenied
 	// }
+
 	return &logical.Response{
 		Auth: &logical.Auth{
 			InternalData: map[string]interface{}{
