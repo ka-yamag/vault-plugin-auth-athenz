@@ -2,6 +2,7 @@ package athenzauth
 
 import (
 	"context"
+	"net/http"
 	"sync"
 
 	"github.com/hashicorp/vault/sdk/framework"
@@ -67,7 +68,8 @@ func backend() (*athenzAuthBackend, error) {
 		return nil, err
 	}
 
-	if err := athenz.NewValidator(b.updaterCtx, conf.Athenz); err != nil {
+	tr := http.Transport{}
+	if err := athenz.NewValidator(b.updaterCtx, conf.Athenz, &tr); err != nil {
 		return nil, err
 	}
 

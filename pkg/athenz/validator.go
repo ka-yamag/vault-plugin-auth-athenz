@@ -2,8 +2,11 @@ package athenz
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net/http"
 	"net/url"
+	"regexp"
 
 	"github.com/katyamag/vault-plugin-auth-athenz/pkg/config"
 	"github.com/katyamag/vault-plugin-auth-athenz/pkg/logger"
@@ -14,8 +17,10 @@ import (
 const defaultHdr = "Yahoo-Principal-Auth"
 
 var (
-	validator Athenz
-	log       = logger.GetLogger()
+	validator        Athenz
+	log              = logger.GetLogger()
+	domainReg        = regexp.MustCompile(`^([a-zA-Z_][a-zA-Z0-9_-]*\.)*[a-zA-Z_][a-zA-Z0-9_-]*$`)
+	errInvalidDomain = errors.New("Invalid athenz domain")
 )
 
 // Validator updates the policy and public key in the background
@@ -34,10 +39,14 @@ func GetValidator() Athenz {
 }
 
 // NewValidator sets the instance
-func NewValidator(ctx context.Context, pluginConfig config.Athenz) error {
+func NewValidator(ctx context.Context, pluginConfig config.Athenz, tr *http.Transport) error {
 	url, err := url.Parse(pluginConfig.URL)
 	if err != nil {
 		return err
+	}
+
+	if !domainReg.Copy().MatchString(pluginConfig.Domain) {
+		return errInvalidDomain
 	}
 
 	daemon, err := authorizerd.New(
@@ -46,6 +55,7 @@ func NewValidator(ctx context.Context, pluginConfig config.Athenz) error {
 		authorizerd.WithPubkeyRefreshDuration("1s"),
 		authorizerd.WithPolicyRefreshDuration(pluginConfig.PolicyRefreshDuration),
 		authorizerd.WithDisableJwkd(),
+		authorizerd.WithTransport(tr),
 	)
 	if err != nil {
 		return err
