@@ -7,12 +7,12 @@ BIN_NAME="vault-plugin-auth-athenz"
 
 if [ "$1" = "build" ]; then
   SHA256_PREFIX="sha256sum"
-  PLUGIN_DIR="/private/tmp/vault/plugin/"
-  CONFIG_FILE_PATH="/private/tmp/vault/plugin/athenz_plugin.yaml"
+  PLUGIN_DIR="/tmp/vault/plugin/"
+  CONFIG_FILE_PATH="/tmp/vault/plugin/athenz_plugin.yaml"
 
   cd ..
   make
-  cp ./target/darwin/vault-plugin-auth-athenz $PLUGIN_DIR
+  cp ./target/linux/vault-plugin-auth-athenz $PLUGIN_DIR
 fi
 
 unameOut=$(uname -s)
