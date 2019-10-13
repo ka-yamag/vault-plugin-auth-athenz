@@ -161,6 +161,7 @@ func Test_validator_Start(t *testing.T) {
 				},
 			}
 		}(),
+		// TODO: check logs
 		func() test {
 			ctx, cancel := context.WithCancel(context.Background())
 			v := Validator{
