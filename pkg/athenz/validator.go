@@ -86,7 +86,7 @@ func (v *Validator) Run(ctx context.Context) {
 				return
 			case err := <-errs:
 				if err != nil {
-					log.Debug(errorWrap("update pubkey error", err.Error()))
+					log.Debug(errorWrap("update error", err.Error()))
 				}
 			}
 		}
