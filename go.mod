@@ -3,8 +3,10 @@ module github.com/katyamag/vault-plugin-auth-athenz
 go 1.12
 
 require (
+	bou.ke/monkey v1.0.1 // indirect
 	github.com/hashicorp/vault/api v1.0.4
 	github.com/hashicorp/vault/sdk v0.1.13
+	github.com/kr/pretty v0.1.0 // indirect
 	github.com/stretchr/testify v1.4.0
 	github.com/yahoo/athenz v1.8.32
 	github.com/yahoojapan/athenz-authorizer/v2 v2.1.0
