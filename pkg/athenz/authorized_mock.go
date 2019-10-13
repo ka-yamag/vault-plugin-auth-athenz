@@ -14,11 +14,12 @@ type MockAuthorizerd struct {
 	startErr           string
 }
 
-// Init is
+// Init is ...
 func (m *MockAuthorizerd) Init(ctx context.Context) error {
 	return m.initErr
 }
 
+// Start is ...
 func (m *MockAuthorizerd) Start(ctx context.Context) <-chan error {
 	if m.startErr != "" {
 		ch := make(chan error, 1)
@@ -32,18 +33,22 @@ func (m *MockAuthorizerd) Start(ctx context.Context) <-chan error {
 	return nil
 }
 
+// VerifyRoleToken is ...
 func (m *MockAuthorizerd) VerifyRoleToken(ctx context.Context, tok, act, res string) error {
 	return m.verifyRoleTokenErr
 }
 
+// VerifyRoleJWT is ...
 func (m *MockAuthorizerd) VerifyRoleJWT(ctx context.Context, tok, act, res string) error {
 	return nil
 }
 
+// VerifyRoleCert is ...
 func (m *MockAuthorizerd) VerifyRoleCert(ctx context.Context, peerCerts []*x509.Certificate, act, res string) error {
 	return nil
 }
 
+// GetPolicyCache is ...
 func (m *MockAuthorizerd) GetPolicyCache(ctx context.Context) map[string]interface{} {
 	return nil
 }

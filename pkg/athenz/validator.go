@@ -39,6 +39,10 @@ func GetValidator() Athenz {
 
 // NewValidator sets the instance
 func NewValidator(pluginConfig config.Athenz) error {
+	if validator != nil {
+		return nil
+	}
+
 	url, err := url.Parse(pluginConfig.URL)
 	if err != nil {
 		return err

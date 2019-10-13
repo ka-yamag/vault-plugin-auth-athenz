@@ -53,7 +53,6 @@ func Factory(ctx context.Context, c *logical.BackendConfig) (logical.Backend, er
 	return b, nil
 }
 
-// Backend is ...
 func backend() (*athenzAuthBackend, error) {
 	var b athenzAuthBackend
 	b.updaterCtx, b.updaterCtxCancel = context.WithCancel(context.Background())
@@ -72,7 +71,9 @@ func backend() (*athenzAuthBackend, error) {
 	}
 
 	// Initialize validator
-	athenz.GetValidator().Init(b.updaterCtx)
+	if err := athenz.GetValidator().Init(b.updaterCtx); err != nil {
+		return nil, err
+	}
 
 	// Start validator
 	athenz.GetValidator().Start(b.updaterCtx)
