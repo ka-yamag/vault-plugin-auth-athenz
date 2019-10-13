@@ -1,0 +1,25 @@
+alias:
+  default: &default
+    working_directory: /go/src/github.com/katyamag/vault-plugin-auth-athenz
+    docker:
+      - image: circleci/golang:1.13
+        environment:
+          GOPATH: "/go"
+          GO111MODULE: "on"
+
+version: 2.1
+jobs:
+  test:
+    <<: *default
+    steps:
+      - checkout
+      - run:
+          name: run tests
+          command: |
+            make all
+
+workflows:
+  version: 2.1
+  build:
+    jobs:
+      - test
