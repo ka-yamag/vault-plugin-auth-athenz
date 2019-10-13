@@ -16,7 +16,7 @@ jobs:
       - run:
           name: run tests
           command: |
-            make all
+            make test
 
 workflows:
   version: 2.1

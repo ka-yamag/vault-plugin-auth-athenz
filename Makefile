@@ -34,7 +34,7 @@ vet:
 fmt:
 	gofmt -l .
 
-test:
+test: vet fmt
 	go test --race -v ./...
 
 darwin:
