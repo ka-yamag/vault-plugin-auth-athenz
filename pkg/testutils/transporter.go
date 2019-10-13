@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// MockTransporter is the struct for mocking http response
+// MockTransporter is a struct for mock http response
 type MockTransporter struct {
 	StatusCode int
 	Body       []byte
@@ -21,6 +21,7 @@ type MockTransporter struct {
 
 // RoundTrip is used to create a mock http response
 func (m *MockTransporter) RoundTrip(req *http.Request) (*http.Response, error) {
+	// If Delay field is set, delay response in m.Delay
 	time.Sleep(m.Delay)
 
 	readcloser := ioutil.NopCloser(bytes.NewBuffer(m.Body))

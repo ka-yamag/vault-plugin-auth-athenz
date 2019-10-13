@@ -8,6 +8,7 @@ import (
 
 // Athenz is interface for athenz setting or daemon
 type Athenz interface {
-	Run(context.Context)
+	Init(context.Context) error
+	Start(context.Context)
 	VerifyToken(context.Context, string, string) (*zts.RoleToken, error)
 }
