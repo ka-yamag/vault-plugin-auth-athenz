@@ -67,7 +67,7 @@ func backend() (*athenzAuthBackend, error) {
 		return nil, err
 	}
 
-	if err := athenz.NewValidator(b.updaterCtx, conf.Athenz); err != nil {
+	if err := athenz.NewValidator(b.updaterCtx, conf.Athenz, nil); err != nil {
 		return nil, err
 	}
 
