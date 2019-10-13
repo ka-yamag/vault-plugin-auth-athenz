@@ -31,6 +31,7 @@ func TestNewConfig(t *testing.T) {
 			data: `---
 athenz:
   url: localhost:4443/zts/v1
+  pubkeyRefreshDuration: 2m
   policyRefreshDuration: 6h
   domain: sample.domain
   policy:

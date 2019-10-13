@@ -17,8 +17,8 @@ ifneq "$(GO_VER_GTEQ11)" "1"
 all:
 	@echo "Please install 1.11.x or newer version of golang"
 else
-.PHONY: vet fmt linux darwin
-all: vet fmt linux darwin
+.PHONY: vet fmt test linux darwin
+all: vet fmt test linux darwin
 endif
 
 else
@@ -33,6 +33,9 @@ vet:
 
 fmt:
 	gofmt -l .
+
+test:
+	go test --race -v ./...
 
 darwin:
 	@echo "Building darwin client..."
