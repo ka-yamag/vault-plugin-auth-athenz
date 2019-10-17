@@ -73,14 +73,10 @@ func pathConfigClient(b *athenzAuthBackend) *framework.Path {
 }
 
 func (b *athenzAuthBackend) pathClientWrite(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
-	log.Debug("pathConfigClient ----")
-
 	name := strings.ToLower(d.Get("name").(string))
 	if name == "" {
 		return logical.ErrorResponse("name must be set"), nil
 	}
-
-	log.Debug(name)
 
 	resp := logical.Response{}
 
