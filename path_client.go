@@ -2,7 +2,9 @@ package athenzauth
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -13,7 +15,10 @@ import (
 	"github.com/katyamag/vault-plugin-auth-athenz/pkg/logger"
 )
 
-var log = logger.GetLogger()
+var (
+	log       = logger.GetLogger()
+	roleRegxp = regexp.MustCompile(`^([a-zA-Z0-9_][a-zA-Z0-9_-]*)(\.[a-zA-Z0-9_][a-zA-Z0-9_-]*)*$`)
+)
 
 const pathPrefix = "clients/"
 
@@ -73,14 +78,10 @@ func pathConfigClient(b *athenzAuthBackend) *framework.Path {
 }
 
 func (b *athenzAuthBackend) pathClientWrite(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
-	log.Debug("pathConfigClient ----")
-
 	name := strings.ToLower(d.Get("name").(string))
 	if name == "" {
 		return logical.ErrorResponse("name must be set"), nil
 	}
-
-	log.Debug(name)
 
 	resp := logical.Response{}
 
@@ -102,8 +103,6 @@ func (b *athenzAuthBackend) pathClientWrite(ctx context.Context, req *logical.Re
 		return logical.ErrorResponse("ttl cannot be negative"), nil
 	}
 
-	log.Debug("ttl ---------------")
-
 	// Parse the max_ttl
 	systemMaxTTL := b.System().MaxLeaseTTL()
 	maxTTL := time.Duration(d.Get("max_ttl").(int)) * time.Second
@@ -121,17 +120,14 @@ func (b *athenzAuthBackend) pathClientWrite(ctx context.Context, req *logical.Re
 		return logical.ErrorResponse("ttl should be shorter than max_ttl"), nil
 	}
 
-	log.Debug("maxttl ---------------")
-
 	// Parse vault policies
 	policies := policyutil.ParsePolicies(d.Get("policies"))
 
-	log.Debug("policy ---------------")
-
-	// TODO: parse role name
+	// Parse role name
 	role := d.Get("role").(string)
-	log.Debug("role ---------------")
-	log.Debug(role)
+	if !roleRegxp.Copy().MatchString(role) {
+		return logical.ErrorResponse("invalid role name"), nil
+	}
 
 	athenzEntry := &AthenzEntry{
 		Name:     name,
@@ -187,7 +183,7 @@ func (b *athenzAuthBackend) athenz(ctx context.Context, s logical.Storage, name 
 		return nil, err
 	}
 	if entry == nil {
-		return nil, nil
+		return nil, errors.New("missing vault entry")
 	}
 
 	result := AthenzEntry{}
