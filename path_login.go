@@ -3,7 +3,6 @@ package athenzauth
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strings"
 
 	"github.com/hashicorp/vault/sdk/framework"
@@ -46,37 +45,14 @@ func (b *athenzAuthBackend) pathAuthLogin(ctx context.Context, req *logical.Requ
 
 	_, err = athenz.GetValidator().VerifyToken(ctx, d.Get("token").(string), athenzEntry.Role)
 	if err != nil {
-		return logical.ErrorResponse(fmt.Sprintf("could not parse roletoken: %s", err)), nil
+		return logical.ErrorResponse("unauthorized athenz principal"), nil
 	}
-
-	// rt, err := athenz.GetUpdater().VerifyRoleToken(b.updaterCtx, roletoken)
-	// if err != nil {
-	//   return nil, logical.ErrPermissionDenied
-	// }
-
-	// // Check issue domain
-	// if athenzEntry.AthenzIssueDomain != rt.Domain {
-	//   return nil, errors.New("the issue domain contained in roletoken does not match registerd it")
-	// }
-
-	// // Check whether role token includes the registered roles
-	// count := 0
-	// for _, regRole := range athenzEntry.AthenzRoles {
-	//   for _, tokenRole := range rt.Roles {
-	//     if regRole == tokenRole {
-	//       count++
-	//     }
-	//   }
-	// }
-	// if count < len(athenzEntry.AthenzRoles) {
-	//   return nil, logical.ErrPermissionDenied
-	// }
 
 	return &logical.Response{
 		Auth: &logical.Auth{
 			InternalData: map[string]interface{}{
-				// "athenzIssueDomain": athenzEntry.AthenzIssueDomain,
-				// "athenzRoles":       strings.Join(athenzEntry.AthenzRoles, ", "),
+				"name": athenzEntry.Name,
+				"role": athenzEntry.Role,
 			},
 			Policies: athenzEntry.Policies,
 			Metadata: map[string]string{

@@ -53,7 +53,7 @@ func NewValidator(pluginConfig config.Athenz) error {
 	}
 
 	daemon, err := authorizerd.New(
-		authorizerd.WithAthenzURL(pluginConfig.URL),
+		authorizerd.WithAthenzURL(url.String()),
 		authorizerd.WithAthenzDomains(pluginConfig.Domain),
 		authorizerd.WithPubkeyRefreshDuration(pluginConfig.PubkeyRefreshDuration),
 		authorizerd.WithPolicyRefreshDuration(pluginConfig.PolicyRefreshDuration),
@@ -67,6 +67,8 @@ func NewValidator(pluginConfig config.Athenz) error {
 	if hdr == "" {
 		hdr = defaultHdr
 	}
+
+	log.Debug(url.String())
 
 	validator = &Validator{
 		domain:           pluginConfig.Domain,
@@ -115,7 +117,7 @@ func (v *Validator) VerifyToken(ctx context.Context, ntoken, role string) (*zts.
 	expireTimeMs := int32(60)
 
 	// request a roletoken
-	roleToken, err := v.client.GetRoleToken(zts.DomainName(v.domain), zts.EntityList(""), &expireTimeMs, &expireTimeMs, "")
+	roleToken, err := v.client.GetRoleToken(zts.DomainName(v.domain), zts.EntityList(role), &expireTimeMs, &expireTimeMs, "")
 	if err != nil {
 		return nil, err
 	}

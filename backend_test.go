@@ -37,10 +37,10 @@ func createTestAthenzConfig(data []byte) (string, string) {
 	return tmpDir, configFilePath
 }
 
-func testConfigWrite(t *testing.T, d map[string]interface{}) logicaltest.TestStep {
+func testConfigWrite(t *testing.T, d map[string]interface{}, name string) logicaltest.TestStep {
 	return logicaltest.TestStep{
 		Operation: logical.UpdateOperation,
-		Path:      "athenz",
+		Path:      "/athenz/clients",
 		Data:      d,
 	}
 }
@@ -82,9 +82,16 @@ func TestBackend_Basic(t *testing.T) {
 		t.Fatalf("failed to create backend")
 	}
 
+	// user1 := map[string]interface{}{
+	//   "name": "user1",
+	//   "role": "test_role",
+	// }
+
 	logicaltest.Test(t, logicaltest.TestCase{
 		CredentialBackend: b,
-		Steps:             []logicaltest.TestStep{},
+		Steps:             []logicaltest.TestStep{
+			// testConfigWrite(t, user1, user1["name"].(string)),
+		},
 	})
 }
 
