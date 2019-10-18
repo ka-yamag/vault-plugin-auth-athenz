@@ -7,6 +7,7 @@ GOPKGNAME = github.com/katyamag/vault-plugin-auth-athenz
 PKG_DATE=$(shell date '+%Y-%m-%dT%H:%M:%S')
 BINARY=vault-plugin-auth-athenz
 SRC=./cmd/vault-plugin-auth-athenz/main.go
+GOFMT_FILE?=$$(find . -name "*.go" | grep -v vendor)
 
 # check to see if go utility is installed
 GO := $(shell command -v go 2> /dev/null)
