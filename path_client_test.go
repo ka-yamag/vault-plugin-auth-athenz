@@ -2,7 +2,6 @@ package athenzauth
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -68,11 +67,6 @@ func getBackend(t *testing.T, path string) (logical.Backend, logical.Storage) {
 }
 
 func TestClientPath_Create(t *testing.T) {
-	type test struct {
-		name      string
-		checkFunc func() error
-	}
-
 	tmpDir, configFilePath := createTestAthenzConfig([]byte(basicConfig))
 	defer func() {
 		err := os.RemoveAll(tmpDir)
@@ -80,8 +74,12 @@ func TestClientPath_Create(t *testing.T) {
 			t.Error(err)
 		}
 	}()
-
 	b, storage := getBackend(t, configFilePath)
+
+	type test struct {
+		name      string
+		checkFunc func() error
+	}
 
 	tests := []test{
 		func() test {
@@ -109,7 +107,7 @@ func TestClientPath_Create(t *testing.T) {
 				checkFunc: func() error {
 					resp, err := b.HandleRequest(context.Background(), req)
 					if err != nil || (resp != nil && resp.IsError()) {
-						return errors.New(fmt.Sprintf("err:%s resp:%#v\n", err, resp))
+						return fmt.Errorf("err:%s resp:%#v", err, resp)
 					}
 
 					actual, err := b.(*athenzAuthBackend).athenz(context.Background(), storage, "user1")
@@ -118,7 +116,48 @@ func TestClientPath_Create(t *testing.T) {
 					}
 
 					if !reflect.DeepEqual(expectedEntry, actual) {
-						return errors.New(fmt.Sprintf("Unexpected role data: expected %#v\n got %#v\n", expectedEntry, actual))
+						return fmt.Errorf("Unexpected athenz data: expected %#v got %#v", expectedEntry, actual)
+					}
+
+					return nil
+				},
+			}
+		}(),
+		func() test {
+			data := map[string]interface{}{
+				"role": "test_access",
+			}
+
+			expectedEntry := &AthenzEntry{
+				Name:     "user1",
+				Role:     "test_access",
+				Policies: []string{},
+				TTL:      10,
+				MaxTTL:   100,
+			}
+
+			req := &logical.Request{
+				Operation: logical.CreateOperation,
+				Path:      "clients/user1",
+				Storage:   storage,
+				Data:      data,
+			}
+
+			return test{
+				name: "success with set ttls",
+				checkFunc: func() error {
+					resp, err := b.HandleRequest(context.Background(), req)
+					if err != nil || (resp != nil && resp.IsError()) {
+						return fmt.Errorf("err:%s resp:%#v", err, resp)
+					}
+
+					actual, err := b.(*athenzAuthBackend).athenz(context.Background(), storage, "user1")
+					if err != nil {
+						return err
+					}
+
+					if !reflect.DeepEqual(expectedEntry, actual) {
+						return fmt.Errorf("Unexpected athenz data: expected %#v got %#v", expectedEntry, actual)
 					}
 
 					return nil
