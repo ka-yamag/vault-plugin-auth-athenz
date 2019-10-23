@@ -88,11 +88,10 @@ func TestClientPath_Create(t *testing.T) {
 			}
 
 			expectedEntry := &AthenzEntry{
-				Name:     "user1",
-				Role:     "test_access",
-				Policies: []string{},
-				TTL:      0,
-				MaxTTL:   0,
+				Name:   "user1",
+				Role:   "test_access",
+				TTL:    0,
+				MaxTTL: 0,
 			}
 
 			req := &logical.Request{
@@ -124,21 +123,24 @@ func TestClientPath_Create(t *testing.T) {
 			}
 		}(),
 		func() test {
+			username := "user2"
+
 			data := map[string]interface{}{
-				"role": "test_access",
+				"role":    "test_access",
+				"ttl":     "10",
+				"max_ttl": "100",
 			}
 
 			expectedEntry := &AthenzEntry{
-				Name:     "user1",
-				Role:     "test_access",
-				Policies: []string{},
-				TTL:      10,
-				MaxTTL:   100,
+				Name:   username,
+				Role:   "test_access",
+				TTL:    10,
+				MaxTTL: 100,
 			}
 
 			req := &logical.Request{
 				Operation: logical.CreateOperation,
-				Path:      "clients/user1",
+				Path:      fmt.Sprintf("clients/%s", username),
 				Storage:   storage,
 				Data:      data,
 			}
@@ -151,7 +153,7 @@ func TestClientPath_Create(t *testing.T) {
 						return fmt.Errorf("err:%s resp:%#v", err, resp)
 					}
 
-					actual, err := b.(*athenzAuthBackend).athenz(context.Background(), storage, "user1")
+					actual, err := b.(*athenzAuthBackend).athenz(context.Background(), storage, username)
 					if err != nil {
 						return err
 					}

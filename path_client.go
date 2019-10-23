@@ -2,7 +2,6 @@ package athenzauth
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -101,28 +100,24 @@ func (b *athenzAuthBackend) pathClientWrite(ctx context.Context, req *logical.Re
 		return logical.ErrorResponse(err.Error()), nil
 	}
 
-	// athenzEntry := &AthenzEntry{
-	//   Name:     name,
-	//   Role:     role,
-	//   Policies: policies,
-	//   TTL:      ttl,
-	//   MaxTTL:   maxTTL,
-	// }
+	if err := tokenutil.UpgradeValue(d, "ttl", "token_ttl", &athenzEntry.TTL, &athenzEntry.TokenTTL); err != nil {
+		return logical.ErrorResponse(err.Error()), nil
+	}
+
+	if err := tokenutil.UpgradeValue(d, "max_ttl", "token_max_ttl", &athenzEntry.MaxTTL, &athenzEntry.TokenMaxTTL); err != nil {
+		return logical.ErrorResponse(err.Error()), nil
+	}
+
+	athenzEntry.Name = name
+	athenzEntry.Role = role
 
 	// Store athenz entry
-	// entry, err := logical.StorageEntryJSON(pathPrefix+name, athenzEntry)
-	// if err != nil {
-	//   return nil, err
-	// }
-	// if err := req.Storage.Put(ctx, entry); err != nil {
-	//   return nil, err
-	// }
+	entry, err := logical.StorageEntryJSON(pathPrefix+name, athenzEntry)
+	if err != nil {
+		return nil, err
+	}
 
-	// if len(resp.Warnings) == 0 {
-	//   return nil, nil
-	// }
-
-	return &resp, nil
+	return nil, req.Storage.Put(ctx, entry)
 }
 
 func (b *athenzAuthBackend) pathClientRead(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
@@ -134,14 +129,22 @@ func (b *athenzAuthBackend) pathClientRead(ctx context.Context, req *logical.Req
 		return nil, nil
 	}
 
+	data := map[string]interface{}{}
+	athenz.PopulateTokenData(data)
+
+	// Add backwards compat data
+	if athenz.TTL > 0 {
+		data["ttl"] = int64(athenz.TTL.Seconds())
+	}
+	if athenz.MaxTTL > 0 {
+		data["max_ttl"] = int64(athenz.MaxTTL.Seconds())
+	}
+	if len(athenz.Policies) > 0 {
+		data["policies"] = data["token_policies"]
+	}
+
 	return &logical.Response{
-		Data: map[string]interface{}{
-			"name":           athenz.Name,
-			"athenz role":    athenz.Role,
-			"vault policies": athenz.Policies,
-			"ttl":            athenz.TTL.Seconds(),
-			"max_ttl":        athenz.MaxTTL.Seconds(),
-		},
+		Data: data,
 	}, nil
 }
 
@@ -155,12 +158,22 @@ func (b *athenzAuthBackend) athenz(ctx context.Context, s logical.Storage, name 
 		return nil, err
 	}
 	if entry == nil {
-		return nil, errors.New("missing vault entry")
+		return nil, nil
 	}
 
 	result := AthenzEntry{}
 	if err := entry.DecodeJSON(&result); err != nil {
 		return nil, err
+	}
+
+	if result.TokenTTL == 0 && result.TTL > 0 {
+		result.TokenTTL = result.TTL
+	}
+	if result.TokenMaxTTL == 0 && result.MaxTTL > 0 {
+		result.TokenMaxTTL = result.MaxTTL
+	}
+	if len(result.TokenPolicies) == 0 && len(result.Policies) > 0 {
+		result.TokenPolicies = result.Policies
 	}
 
 	return &result, nil

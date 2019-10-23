@@ -11,8 +11,9 @@ if [ "$1" = "build" ]; then
   CONFIG_FILE_PATH="/private/tmp/vault/plugin/athenz_plugin.yaml"
 
   cd ..
-  make
+  make darwin
   cp ./target/darwin/vault-plugin-auth-athenz $PLUGIN_DIR
+  cp /Users/katyamag/Documents/vault_sandbox/athenz_plugin.yaml $CONFIG_FILE_PATH
 fi
 
 unameOut=$(uname -s)
