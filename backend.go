@@ -2,6 +2,7 @@ package athenzauth
 
 import (
 	"context"
+	"errors"
 	"sync"
 
 	"github.com/hashicorp/vault/sdk/framework"
@@ -20,9 +21,9 @@ The "athenz" credential provider allows authentication using Athenz.
 var confPath = ""
 
 // SetConfigPath sets the config file path for athenz updator daemon
-func SetConfigPath(path string) {
-	confPath = path
-}
+// func SetConfigPath(path string) {
+//   confPath = path
+// }
 
 type athenzAuthBackend struct {
 	*framework.Backend
@@ -39,7 +40,7 @@ func Factory(ctx context.Context, c *logical.BackendConfig) (logical.Backend, er
 		confPath = p
 	}
 	if confPath == "" {
-		confPath = defaultConfigPath
+		return nil, errors.New("athenz config path not set")
 	}
 
 	b, err := backend()
@@ -56,10 +57,6 @@ func Factory(ctx context.Context, c *logical.BackendConfig) (logical.Backend, er
 func backend() (*athenzAuthBackend, error) {
 	var b athenzAuthBackend
 	b.updaterCtx, b.updaterCtxCancel = context.WithCancel(context.Background())
-
-	if confPath == "" {
-		confPath = defaultConfigPath
-	}
 
 	conf, err := config.NewConfig(confPath)
 	if err != nil {
