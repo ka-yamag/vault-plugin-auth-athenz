@@ -3,42 +3,17 @@ package athenzauth
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
-	"path/filepath"
 	"reflect"
 	"testing"
 	"time"
 
 	hlog "github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/vault/sdk/helper/logging"
+	"github.com/hashicorp/vault/sdk/helper/tokenutil"
 	"github.com/hashicorp/vault/sdk/logical"
 	"github.com/katyamag/vault-plugin-auth-athenz/pkg/athenz"
 )
-
-const (
-	basicConfig = `---
-athenz:
-  url: https://test.athenz.com/zts/v1
-  pubkeyRefreshDuration: 2m
-  policyRefreshDuration: 6h
-  domain: sample.domain
-  policy:
-    resource: vault
-    action: access
-`
-)
-
-func createTestAthenzConfig(data []byte) (string, string) {
-	// Create directory to place configuration files
-	tmpDir, _ := ioutil.TempDir("", "test")
-	configFilePath := filepath.Join(tmpDir, "data.yaml")
-
-	// Prepare for a test configuration file
-	ioutil.WriteFile(configFilePath, []byte(basicConfig), 0644)
-
-	return tmpDir, configFilePath
-}
 
 func getBackend(t *testing.T, path string) (logical.Backend, logical.Storage) {
 	defaultLeaseTTLVal := time.Hour * 12
@@ -126,16 +101,20 @@ func TestClientPath_Create(t *testing.T) {
 			username := "user2"
 
 			data := map[string]interface{}{
-				"role":    "test_access",
-				"ttl":     "10",
-				"max_ttl": "100",
+				"role":    "test_access2",
+				"ttl":     "10s",
+				"max_ttl": "100s",
 			}
 
 			expectedEntry := &AthenzEntry{
 				Name:   username,
-				Role:   "test_access",
-				TTL:    10,
-				MaxTTL: 100,
+				Role:   "test_access2",
+				TTL:    time.Duration(time.Second * 10),
+				MaxTTL: time.Duration(time.Second * 100),
+				TokenParams: tokenutil.TokenParams{
+					TokenTTL:    time.Duration(time.Second * 10),
+					TokenMaxTTL: time.Duration(time.Second * 100),
+				},
 			}
 
 			req := &logical.Request{
@@ -146,7 +125,52 @@ func TestClientPath_Create(t *testing.T) {
 			}
 
 			return test{
-				name: "success with set ttls",
+				name: "success with ttls",
+				checkFunc: func() error {
+					resp, err := b.HandleRequest(context.Background(), req)
+					if err != nil || (resp != nil && resp.IsError()) {
+						return fmt.Errorf("err:%s resp:%#v", err, resp)
+					}
+
+					actual, err := b.(*athenzAuthBackend).athenz(context.Background(), storage, username)
+					if err != nil {
+						return err
+					}
+
+					if !reflect.DeepEqual(expectedEntry, actual) {
+						return fmt.Errorf("Unexpected athenz data: expected %#v got %#v", expectedEntry, actual)
+					}
+
+					return nil
+				},
+			}
+		}(),
+		func() test {
+			username := "user3"
+
+			data := map[string]interface{}{
+				"role":     "test_access3",
+				"policies": "test, team_pol",
+			}
+
+			expectedEntry := &AthenzEntry{
+				Name:     username,
+				Role:     "test_access3",
+				Policies: []string{"team_pol", "test"},
+				TokenParams: tokenutil.TokenParams{
+					TokenPolicies: []string{"team_pol", "test"},
+				},
+			}
+
+			req := &logical.Request{
+				Operation: logical.CreateOperation,
+				Path:      fmt.Sprintf("clients/%s", username),
+				Storage:   storage,
+				Data:      data,
+			}
+
+			return test{
+				name: "success with ttls",
 				checkFunc: func() error {
 					resp, err := b.HandleRequest(context.Background(), req)
 					if err != nil || (resp != nil && resp.IsError()) {
