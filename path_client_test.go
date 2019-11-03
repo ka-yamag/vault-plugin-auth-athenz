@@ -202,3 +202,59 @@ func TestClientPath_Create(t *testing.T) {
 		})
 	}
 }
+
+func TestClientPath_CreateFailure(t *testing.T) {
+	tmpDir, configFilePath := createTestAthenzConfig([]byte(basicConfig))
+	defer func() {
+		err := os.RemoveAll(tmpDir)
+		if err != nil {
+			t.Error(err)
+		}
+	}()
+	b, storage := getBackend(t, configFilePath)
+
+	type test struct {
+		name      string
+		checkFunc func() error
+	}
+
+	tests := []test{
+		func() test {
+			data := map[string]interface{}{
+				"role": "+-invalid_role",
+			}
+
+			expectedErr := "invalid role name"
+
+			req := &logical.Request{
+				Operation: logical.CreateOperation,
+				Path:      "clients/user",
+				Storage:   storage,
+				Data:      data,
+			}
+
+			return test{
+				name: "failed to create if the role is invalid",
+				checkFunc: func() error {
+					resp, err := b.HandleRequest(context.Background(), req)
+					actual := resp.Data["error"]
+					if err != nil || actual != expectedErr {
+						return fmt.Errorf("Unexpected athenz data: expected %#v got %#v", expectedErr, actual)
+					}
+
+					return nil
+				},
+			}
+		}(),
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.checkFunc()
+			if err != nil {
+				t.Error(err)
+				return
+			}
+		})
+	}
+}

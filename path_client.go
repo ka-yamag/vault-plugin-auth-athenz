@@ -71,6 +71,7 @@ func pathConfigClient(b *athenzAuthBackend) *framework.Path {
 			logical.CreateOperation: b.pathClientWrite,
 		},
 
+		// TODO:
 		// HelpSynopsis: pathAthenzHelpSyn,
 	}
 }
