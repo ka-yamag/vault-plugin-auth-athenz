@@ -16,7 +16,9 @@ jobs:
       - run:
           name: run tests
           command: |
-            make test
+            go test -v -race -covermode=atomic -coverprofile=coverage.out ./...
+            go tool cover -html=coverage.out -o coverage.html
+            bash <(curl -s https://codecov.io/bash)
 
 workflows:
   version: 2.1

@@ -11,7 +11,7 @@ type Config struct {
 	Athenz Athenz `yaml:"athenz"`
 }
 
-// Athenz is the struct of basic infomation for athenz
+// Athenz is the struct of basic information for athenz
 type Athenz struct {
 	URL                   string `yaml:"url"`
 	PubkeyRefreshDuration string `yaml:"pubkeyRefreshDutation"`
