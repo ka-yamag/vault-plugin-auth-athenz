@@ -39,17 +39,17 @@ func GetValidator() Athenz {
 
 // NewValidator sets the instance
 func NewValidator(pluginConfig config.Athenz) error {
-	if validator != nil {
-		return nil
-	}
-
 	url, err := url.Parse(pluginConfig.URL)
 	if err != nil {
 		return err
 	}
 
-	if !domainReg.Copy().MatchString(pluginConfig.Domain) {
+	if !domainReg.MatchString(pluginConfig.Domain) {
 		return errInvalidDomain
+	}
+
+	if validator != nil {
+		return nil
 	}
 
 	daemon, err := authorizerd.New(

@@ -29,8 +29,8 @@ all:
 
 endif
 
-vet:
-	go vet .
+mod:
+	go mod tidy
 
 fmt:
 	gofmt -l .

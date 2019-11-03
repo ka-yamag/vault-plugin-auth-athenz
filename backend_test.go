@@ -2,6 +2,7 @@ package athenzauth
 
 import (
 	"context"
+	"errors"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -40,8 +41,8 @@ athenz:
 
 	invalidAthenzParamConfig = `---
 athenz:
-  url: http://[fe80::1%en0]
-  doain: 00domain
+  url: https://test.athenz.com/zts/v1
+  domain: -01domain
 `
 )
 
@@ -57,7 +58,6 @@ func createTestAthenzConfig(data []byte) (string, string) {
 }
 
 func TestFactory_CreateFailure(t *testing.T) {
-
 	defaultLeaseTTLVal := time.Hour * 12
 	maxLeaseTTLVal := time.Hour * 24
 
@@ -82,10 +82,18 @@ func TestFactory_CreateFailure(t *testing.T) {
 			expectedErr:  "yaml: line 4: mapping values are not allowed in this context",
 		},
 		{
-			name:         "failed to load athenz config",
+			name:         "failed to initialize athenz validator",
+			athenzConfig: []byte(basicConfig),
+			MockAthenz: athenz.MockAthenz{
+				InitErr: errors.New("failed"),
+			},
+			expectedErr: "failed",
+		},
+		{
+			name:         "failed to create validator instance because of invalid url",
 			athenzConfig: []byte(invalidAthenzParamConfig),
 			MockAthenz:   athenz.MockAthenz{},
-			expectedErr:  "",
+			expectedErr:  "Invalid athenz domain",
 		},
 	}
 
@@ -98,7 +106,7 @@ func TestFactory_CreateFailure(t *testing.T) {
 					t.Error(err)
 				}
 			}()
-			athenz.SetMockAthenz(&athenz.MockAthenz{})
+			athenz.SetMockAthenz(&tt.MockAthenz)
 
 			backendConfig := &logical.BackendConfig{
 				Config: map[string]string{

@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-test/deep"
 	hlog "github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/vault/sdk/helper/logging"
 	"github.com/hashicorp/vault/sdk/helper/tokenutil"
@@ -15,13 +16,21 @@ import (
 	"github.com/katyamag/vault-plugin-auth-athenz/pkg/athenz"
 )
 
-func getBackend(t *testing.T, path string) (logical.Backend, logical.Storage) {
+func getBackend(t *testing.T) (logical.Backend, logical.Storage, func()) {
 	defaultLeaseTTLVal := time.Hour * 12
 	maxLeaseTTLVal := time.Hour * 24
 
+	tmpDir, configFilePath := createTestAthenzConfig([]byte(basicConfig))
+	removeFunc := func() {
+		err := os.RemoveAll(tmpDir)
+		if err != nil {
+			t.Error(err)
+		}
+	}
+
 	config := &logical.BackendConfig{
 		Config: map[string]string{
-			"--config-file": path,
+			"--config-file": configFilePath,
 		},
 		Logger: logging.NewVaultLogger(hlog.Trace),
 		System: &logical.StaticSystemView{
@@ -38,18 +47,12 @@ func getBackend(t *testing.T, path string) (logical.Backend, logical.Storage) {
 		t.Fatalf("unable to create backend: %v", err)
 	}
 
-	return b, config.StorageView
+	return b, config.StorageView, removeFunc
 }
 
 func TestClientPath_Create(t *testing.T) {
-	tmpDir, configFilePath := createTestAthenzConfig([]byte(basicConfig))
-	defer func() {
-		err := os.RemoveAll(tmpDir)
-		if err != nil {
-			t.Error(err)
-		}
-	}()
-	b, storage := getBackend(t, configFilePath)
+	b, storage, removeFunc := getBackend(t)
+	defer removeFunc()
 
 	type test struct {
 		name      string
@@ -190,35 +193,6 @@ func TestClientPath_Create(t *testing.T) {
 				},
 			}
 		}(),
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := tt.checkFunc()
-			if err != nil {
-				t.Error(err)
-				return
-			}
-		})
-	}
-}
-
-func TestClientPath_CreateFailure(t *testing.T) {
-	tmpDir, configFilePath := createTestAthenzConfig([]byte(basicConfig))
-	defer func() {
-		err := os.RemoveAll(tmpDir)
-		if err != nil {
-			t.Error(err)
-		}
-	}()
-	b, storage := getBackend(t, configFilePath)
-
-	type test struct {
-		name      string
-		checkFunc func() error
-	}
-
-	tests := []test{
 		func() test {
 			data := map[string]interface{}{
 				"role": "+-invalid_role",
@@ -252,9 +226,109 @@ func TestClientPath_CreateFailure(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.checkFunc()
 			if err != nil {
-				t.Error(err)
+				t.Fatal(err)
 				return
 			}
 		})
+	}
+}
+
+func TestClientPath_Read(t *testing.T) {
+	b, storage, removeFunc := getBackend(t)
+	defer removeFunc()
+
+	// Create user "testuser"
+	resp, err := b.HandleRequest(context.Background(), &logical.Request{
+		Path:      "clients/testuser",
+		Operation: logical.UpdateOperation,
+		Storage:   storage,
+		Data: map[string]interface{}{
+			"role":     "test_access1",
+			"ttl":      "10s",
+			"max_ttl":  "100s",
+			"policies": "test, team_pol",
+		},
+	})
+	if err != nil || (resp != nil && resp.IsError()) {
+		t.Fatalf("bad: resp: %#v\nerr: %v", resp, err)
+	}
+
+	// Read user "testuser"
+	resp, err = b.HandleRequest(context.Background(), &logical.Request{
+		Path:      "clients/testuser",
+		Operation: logical.ReadOperation,
+		Storage:   storage,
+	})
+	if err != nil || (resp != nil && resp.IsError()) {
+		t.Fatalf("bad: resp: %#v\nerr: %v", resp, err)
+	}
+
+	if diff := deep.Equal(resp.Data["policies"].([]string), []string{"team_pol", "test"}); diff != nil {
+		t.Fatal(diff)
+	}
+	if resp.Data["token_ttl"].(int64) != 10 || resp.Data["token_max_ttl"].(int64) != 100 {
+		t.Fatalf("bad: token_ttl and token_max_ttl are not set correctly")
+	}
+}
+
+func TestClientPath_Delete(t *testing.T) {
+	b, storage, removeFunc := getBackend(t)
+	defer removeFunc()
+
+	// Create user "testuser"
+	resp, err := b.HandleRequest(context.Background(), &logical.Request{
+		Path:      "clients/testuser",
+		Operation: logical.UpdateOperation,
+		Storage:   storage,
+		Data: map[string]interface{}{
+			"role":     "test_access1",
+			"ttl":      "10s",
+			"max_ttl":  "100s",
+			"policies": "test, team_pol",
+		},
+	})
+	if err != nil || (resp != nil && resp.IsError()) {
+		t.Fatalf("bad: resp: %#v\nerr: %v", resp, err)
+	}
+
+	// Delete user "testuser"
+	resp, err = b.HandleRequest(context.Background(), &logical.Request{
+		Path:      "clients/testuser",
+		Operation: logical.DeleteOperation,
+		Storage:   storage,
+	})
+	if err != nil || (resp != nil && resp.IsError()) {
+		t.Fatalf("bad: resp: %#v\nerr: %v", resp, err)
+	}
+}
+
+func TestAthenz(t *testing.T) {
+	b, storage, removeFunc := getBackend(t)
+	defer removeFunc()
+
+	// Create user "testuser"
+	resp, err := b.HandleRequest(context.Background(), &logical.Request{
+		Path:      "clients/testuser",
+		Operation: logical.UpdateOperation,
+		Storage:   storage,
+		Data: map[string]interface{}{
+			"role":    "test_access1",
+			"ttl":     "0",
+			"max_ttl": "0",
+		},
+	})
+	if err != nil || (resp != nil && resp.IsError()) {
+		t.Fatalf("bad: resp: %#v\nerr: %v", resp, err)
+	}
+
+	_, err = b.(*athenzAuthBackend).athenz(context.Background(), storage, "testuser")
+	if err != nil {
+		t.Fatalf("bad: athenz: err: %v", err)
+	}
+
+	// not exist
+	a, err := b.(*athenzAuthBackend).athenz(context.Background(), storage, "non-exsit")
+	if err != nil && a != nil {
+		t.Fatalf("bad: athenz: err: %v", err)
 	}
 }
