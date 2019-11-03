@@ -3,6 +3,7 @@ module github.com/katyamag/vault-plugin-auth-athenz
 go 1.12
 
 require (
+	bou.ke/monkey v1.0.1 // indirect
 	github.com/go-test/deep v1.0.2-0.20181118220953-042da051cf31
 	github.com/hashicorp/go-hclog v0.9.2
 	github.com/hashicorp/vault/api v1.0.5-0.20190909201928-35325e2c3262
