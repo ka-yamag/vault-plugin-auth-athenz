@@ -2,7 +2,6 @@ package athenzauth
 
 import (
 	"context"
-	"errors"
 	"strings"
 
 	"github.com/hashicorp/vault/sdk/framework"
@@ -30,12 +29,12 @@ func pathLogin(b *athenzAuthBackend) *framework.Path {
 func (b *athenzAuthBackend) pathAuthLogin(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
 	name := strings.ToLower(d.Get("name").(string))
 	if name == "" {
-		return nil, errors.New("missing name")
+		return logical.ErrorResponse("missing name"), nil
 	}
 
 	roletoken := d.Get("token").(string)
 	if roletoken == "" {
-		return nil, errors.New("missing athenz token")
+		return logical.ErrorResponse("missing athenz token"), nil
 	}
 
 	athenzEntry, err := b.athenz(ctx, req.Storage, name)

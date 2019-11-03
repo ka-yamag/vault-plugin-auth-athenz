@@ -134,10 +134,10 @@ func (b *athenzAuthBackend) pathClientRead(ctx context.Context, req *logical.Req
 	athenz.PopulateTokenData(data)
 
 	// Add backwards compat data
-	if athenz.TTL > 0 {
+	if athenz.TTL.Seconds() > 0 {
 		data["ttl"] = int64(athenz.TTL.Seconds())
 	}
-	if athenz.MaxTTL > 0 {
+	if athenz.MaxTTL.Seconds() > 0 {
 		data["max_ttl"] = int64(athenz.MaxTTL.Seconds())
 	}
 	if len(athenz.Policies) > 0 {
@@ -167,10 +167,10 @@ func (b *athenzAuthBackend) athenz(ctx context.Context, s logical.Storage, name 
 		return nil, err
 	}
 
-	if result.TokenTTL == 0 && result.TTL > 0 {
+	if result.TokenTTL.Seconds() == 0 && result.TTL.Seconds() > 0 {
 		result.TokenTTL = result.TTL
 	}
-	if result.TokenMaxTTL == 0 && result.MaxTTL > 0 {
+	if result.TokenMaxTTL.Seconds() == 0 && result.MaxTTL.Seconds() > 0 {
 		result.TokenMaxTTL = result.MaxTTL
 	}
 	if len(result.TokenPolicies) == 0 && len(result.Policies) > 0 {
