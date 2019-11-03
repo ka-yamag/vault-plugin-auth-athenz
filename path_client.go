@@ -3,22 +3,27 @@ package athenzauth
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
 	"github.com/hashicorp/vault/sdk/framework"
-	"github.com/hashicorp/vault/sdk/helper/policyutil"
+	"github.com/hashicorp/vault/sdk/helper/tokenutil"
 	"github.com/hashicorp/vault/sdk/logical"
-
 	"github.com/katyamag/vault-plugin-auth-athenz/pkg/logger"
 )
 
-var log = logger.GetLogger()
+var (
+	log       = logger.GetLogger()
+	roleRegxp = regexp.MustCompile(`^([a-zA-Z0-9_][a-zA-Z0-9_-]*)(\.[a-zA-Z0-9_][a-zA-Z0-9_-]*)*$`)
+)
 
 const pathPrefix = "clients/"
 
 // AthenzEntry is used to report that the user requests to read athenz/ path
 type AthenzEntry struct {
+	tokenutil.TokenParams
+
 	Name     string
 	Role     string
 	Policies []string
@@ -42,22 +47,20 @@ func pathConfigClient(b *athenzAuthBackend) *framework.Path {
 
 			"policies": {
 				Type:        framework.TypeCommaStringSlice,
-				Description: `Comma-separated list of policies.`,
+				Description: tokenutil.DeprecationText("token_policies"),
+				Deprecated:  true,
 			},
 
 			"ttl": {
 				Type:        framework.TypeDurationSecond,
-				Description: `TTL for tokens issued by this backend. Defaults to system/backend default TTL time.`,
-			},
-
-			"lease": {
-				Type:        framework.TypeInt,
-				Description: `Deprecated: use "ttl" instead. TTL time in seconds. Defaults to system/backend default TTL.`,
+				Description: tokenutil.DeprecationText("token_ttl"),
+				Deprecated:  true,
 			},
 
 			"max_ttl": {
 				Type:        framework.TypeDurationSecond,
-				Description: `Duration in either an integer number of seconds (3600) or an integer time unit (60m) after which the issued token can no longer be renewed.`,
+				Description: tokenutil.DeprecationText("token_max_ttl"),
+				Deprecated:  true,
 			},
 		},
 
@@ -68,100 +71,54 @@ func pathConfigClient(b *athenzAuthBackend) *framework.Path {
 			logical.CreateOperation: b.pathClientWrite,
 		},
 
+		// TODO:
 		// HelpSynopsis: pathAthenzHelpSyn,
 	}
 }
 
 func (b *athenzAuthBackend) pathClientWrite(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
-	log.Debug("pathConfigClient ----")
-
 	name := strings.ToLower(d.Get("name").(string))
 	if name == "" {
 		return logical.ErrorResponse("name must be set"), nil
 	}
 
-	log.Debug(name)
-
-	resp := logical.Response{}
-
-	// Parse the ttl (or lease duration)
-	systemDefaultTTL := b.System().DefaultLeaseTTL()
-	ttl := time.Duration(d.Get("ttl").(int)) * time.Second
-	if ttl == 0 {
-		ttl = time.Duration(d.Get("lease").(int)) * time.Second
-	}
-	if ttl > systemDefaultTTL {
-		resp.AddWarning(
-			fmt.Sprintf("Given ttl of %d seconds is greater than current mount/system default of %d seconds",
-				ttl/time.Second,
-				systemDefaultTTL/time.Second,
-			),
-		)
-	}
-	if ttl < time.Duration(0) {
-		return logical.ErrorResponse("ttl cannot be negative"), nil
+	athenzEntry, err := b.athenz(ctx, req.Storage, strings.ToLower(d.Get("name").(string)))
+	if err != nil {
+		return nil, err
 	}
 
-	log.Debug("ttl ---------------")
-
-	// Parse the max_ttl
-	systemMaxTTL := b.System().MaxLeaseTTL()
-	maxTTL := time.Duration(d.Get("max_ttl").(int)) * time.Second
-	if maxTTL > systemMaxTTL {
-		resp.AddWarning(fmt.Sprintf(
-			"Given max_ttl of %d seconds is greater than current mount/system default of %d seconds",
-			maxTTL/time.Second,
-			systemMaxTTL/time.Second),
-		)
-	}
-	if maxTTL < time.Duration(0) {
-		return logical.ErrorResponse("max_ttl cannot be negative"), nil
-	}
-	if maxTTL != 0 && ttl > maxTTL {
-		return logical.ErrorResponse("ttl should be shorter than max_ttl"), nil
+	if athenzEntry == nil {
+		athenzEntry = &AthenzEntry{}
 	}
 
-	log.Debug("maxttl ---------------")
-
-	// Parse vault policies
-	policies := policyutil.ParsePolicies(d.Get("policies"))
-
-	log.Debug("policy ---------------")
-
-	// Parse roletoken
-	// parsedRoleToken, err := athenz.GetUpdater().VerifyRoleToken(ctx, d.Get("roletoken").(string))
-	// if err != nil {
-	//   return logical.ErrorResponse(fmt.Sprintf("could not parse roletoken: %s", err)), nil
-	// }
-
-	// TODO: parse role name
+	// Parse role name
 	role := d.Get("role").(string)
-
-	log.Debug("role ---------------")
-	log.Debug(role)
-
-	athenzEntry := &AthenzEntry{
-		Name:     name,
-		Role:     role,
-		Policies: policies,
-		TTL:      ttl,
-		MaxTTL:   maxTTL,
+	if !roleRegxp.Copy().MatchString(role) {
+		return logical.ErrorResponse("invalid role name"), nil
 	}
+
+	if err := tokenutil.UpgradeValue(d, "policies", "token_policies", &athenzEntry.Policies, &athenzEntry.TokenPolicies); err != nil {
+		return logical.ErrorResponse(err.Error()), nil
+	}
+
+	if err := tokenutil.UpgradeValue(d, "ttl", "token_ttl", &athenzEntry.TTL, &athenzEntry.TokenTTL); err != nil {
+		return logical.ErrorResponse(err.Error()), nil
+	}
+
+	if err := tokenutil.UpgradeValue(d, "max_ttl", "token_max_ttl", &athenzEntry.MaxTTL, &athenzEntry.TokenMaxTTL); err != nil {
+		return logical.ErrorResponse(err.Error()), nil
+	}
+
+	athenzEntry.Name = name
+	athenzEntry.Role = role
 
 	// Store athenz entry
 	entry, err := logical.StorageEntryJSON(pathPrefix+name, athenzEntry)
 	if err != nil {
 		return nil, err
 	}
-	if err := req.Storage.Put(ctx, entry); err != nil {
-		return nil, err
-	}
 
-	if len(resp.Warnings) == 0 {
-		return nil, nil
-	}
-
-	return &resp, nil
+	return nil, req.Storage.Put(ctx, entry)
 }
 
 func (b *athenzAuthBackend) pathClientRead(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
@@ -173,14 +130,22 @@ func (b *athenzAuthBackend) pathClientRead(ctx context.Context, req *logical.Req
 		return nil, nil
 	}
 
+	data := map[string]interface{}{}
+	athenz.PopulateTokenData(data)
+
+	// Add backwards compat data
+	if athenz.TTL.Seconds() > 0 {
+		data["ttl"] = int64(athenz.TTL.Seconds())
+	}
+	if athenz.MaxTTL.Seconds() > 0 {
+		data["max_ttl"] = int64(athenz.MaxTTL.Seconds())
+	}
+	if len(athenz.Policies) > 0 {
+		data["policies"] = data["token_policies"]
+	}
+
 	return &logical.Response{
-		Data: map[string]interface{}{
-			"name":           athenz.Name,
-			"athenz role":    athenz.Role,
-			"vault policies": athenz.Policies,
-			"ttl":            athenz.TTL.Seconds(),
-			"max_ttl":        athenz.MaxTTL.Seconds(),
-		},
+		Data: data,
 	}, nil
 }
 
@@ -200,6 +165,16 @@ func (b *athenzAuthBackend) athenz(ctx context.Context, s logical.Storage, name 
 	result := AthenzEntry{}
 	if err := entry.DecodeJSON(&result); err != nil {
 		return nil, err
+	}
+
+	if result.TokenTTL.Seconds() == 0 && result.TTL.Seconds() > 0 {
+		result.TokenTTL = result.TTL
+	}
+	if result.TokenMaxTTL.Seconds() == 0 && result.MaxTTL.Seconds() > 0 {
+		result.TokenMaxTTL = result.MaxTTL
+	}
+	if len(result.TokenPolicies) == 0 && len(result.Policies) > 0 {
+		result.TokenPolicies = result.Policies
 	}
 
 	return &result, nil
