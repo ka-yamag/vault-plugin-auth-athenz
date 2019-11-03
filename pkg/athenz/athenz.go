@@ -1,12 +1,14 @@
 package athenz
 
-// import (
-//   "context"
+import (
+	"context"
 
-// )
+	"github.com/yahoo/athenz/clients/go/zts"
+)
 
-// // Athenz is interface for athenz dameon
-// type Athenz interface {
-//   Run(context.Context)
-//   VerifyToken(context.Context, string) (*role.RoleToken, error)
-// }
+// Athenz is interface for athenz setting or daemon
+type Athenz interface {
+	Init(context.Context) error
+	Start(context.Context)
+	VerifyToken(context.Context, string, string) (*zts.RoleToken, error)
+}
