@@ -1,5 +1,5 @@
 # vault-plugin-auth-athenz
-[![CircleCI](https://circleci.com/gh/katyamag/vault-plugin-auth-athenz/tree/master.svg?style=svg)](https://circleci.com/gh/katyamag/vault-plugin-auth-athenz/tree/master)
+[![CircleCI](https://circleci.com/gh/katyamag/vault-plugin-auth-athenz/tree/master.svg?style=svg)](https://circleci.com/gh/katyamag/vault-plugin-auth-athenz/tree/master) [![release](https://img.shields.io/github/release/katyamag/vault-plugin-auth-athenz.svg?style=flat-square)](https://github.com/katyamag/vault-plugin-auth-athenz/releases/latest) [![Go Report Card](https://goreportcard.com/badge/github.com/katyamag/vault-plugin-auth-athenz)](https://goreportcard.com/report/github.com/katyamag/vault-plugin-auth-athenz)
 
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
