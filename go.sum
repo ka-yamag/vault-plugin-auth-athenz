@@ -166,6 +166,8 @@ github.com/vmihailenco/msgpack v4.0.1+incompatible/go.mod h1:fy3FlTQTDXWkZ7Bh6Ac
 github.com/yahoo/athenz v1.8.31/go.mod h1:5p1/T3n45DT6IICiDgsG//9Sf0DR3iGESoMq5jVybrQ=
 github.com/yahoo/athenz v1.8.32 h1:cE36hdfKRJHT/RSydBrxXQ94mrMx5UV3pVtiizTvWcQ=
 github.com/yahoo/athenz v1.8.32/go.mod h1:VXoOPNbzHBTGR3EpSRFRGHIzpnuwlb/bdcVOTOCLRX4=
+github.com/yahoo/athenz v1.8.36 h1:cXNoj9gMSBZaNQrtYYC8ylbHfwmK16i6MN5+kn5bsEg=
+github.com/yahoo/athenz v1.8.36/go.mod h1:bGC4PzHUQRC2byuyYqnKYofHCsGLPWSNoAWorW+juTc=
 github.com/yahoojapan/athenz-authorizer/v2 v2.1.0 h1:zYz8l+b4dAKyBpPJP2aklMfkW80HBd1wCeVD6JDbdMQ=
 github.com/yahoojapan/athenz-authorizer/v2 v2.1.0/go.mod h1:V6tSmwdnV7FcTsyhzv1h69EZT8NH4BL7JI6g90Eyybg=
 go.uber.org/atomic v1.5.0 h1:OI5t8sDa1Or+q8AeE+yKeB/SDYioSHAgcVljj9JIETY=
