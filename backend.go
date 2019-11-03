@@ -2,10 +2,13 @@ package athenzauth
 
 import (
 	"context"
+	"errors"
 	"sync"
 
 	"github.com/hashicorp/vault/sdk/framework"
 	"github.com/hashicorp/vault/sdk/logical"
+	"github.com/katyamag/vault-plugin-auth-athenz/pkg/athenz"
+	"github.com/katyamag/vault-plugin-auth-athenz/pkg/config"
 )
 
 const (
@@ -18,9 +21,9 @@ The "athenz" credential provider allows authentication using Athenz.
 var confPath = ""
 
 // SetConfigPath sets the config file path for athenz updator daemon
-func SetConfigPath(path string) {
-	confPath = path
-}
+// func SetConfigPath(path string) {
+//   confPath = path
+// }
 
 type athenzAuthBackend struct {
 	*framework.Backend
@@ -33,12 +36,12 @@ type athenzAuthBackend struct {
 
 // Factory is used by framework
 func Factory(ctx context.Context, c *logical.BackendConfig) (logical.Backend, error) {
-	// if p, ok := c.Config["--config-file"]; ok {
-	//   confPath = p
-	// }
-	// if confPath == "" {
-	//   confPath = defaultConfigPath
-	// }
+	if p, ok := c.Config["--config-file"]; ok {
+		confPath = p
+	}
+	if confPath == "" {
+		return nil, errors.New("athenz config path not set")
+	}
 
 	b, err := backend()
 	if err != nil {
@@ -51,26 +54,26 @@ func Factory(ctx context.Context, c *logical.BackendConfig) (logical.Backend, er
 	return b, nil
 }
 
-// Backend is ...
 func backend() (*athenzAuthBackend, error) {
 	var b athenzAuthBackend
-	// b.updaterCtx, b.updaterCtxCancel = context.WithCancel(context.Background())
+	b.updaterCtx, b.updaterCtxCancel = context.WithCancel(context.Background())
 
-	// if confPath == "" {
-	//   confPath = defaultConfigPath
-	// }
+	conf, err := config.NewConfig(confPath)
+	if err != nil {
+		return nil, err
+	}
 
-	// conf, err := config.NewConfig(confPath)
-	// if err != nil {
-	//   return nil, err
-	// }
+	if err := athenz.NewValidator(conf.Athenz); err != nil {
+		return nil, err
+	}
 
-	// if err := athenz.NewAthenzUpdaterDaemon(conf.Athenz); err != nil {
-	//   return nil, err
-	// }
+	// Initialize validator
+	if err := athenz.GetValidator().Init(b.updaterCtx); err != nil {
+		return nil, err
+	}
 
-	// // Start updater
-	// athenz.GetUpdater().Run(b.updaterCtx)
+	// Start validator
+	athenz.GetValidator().Start(b.updaterCtx)
 
 	b.Backend = &framework.Backend{
 		Help:        backendHelp,
@@ -82,7 +85,7 @@ func backend() (*athenzAuthBackend, error) {
 		Paths: framework.PathAppend(
 			[]*framework.Path{
 				pathConfigClient(&b),
-				// pathLogin(&b),
+				pathLogin(&b),
 				pathListClients(&b),
 			},
 		),
