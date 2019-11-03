@@ -11,5 +11,5 @@ require (
 	github.com/yahoo/athenz v1.8.32
 	github.com/yahoojapan/athenz-authorizer/v2 v2.1.0
 	go.uber.org/zap v1.12.0
-	gopkg.in/yaml.v2 v2.2.2
+	gopkg.in/yaml.v2 v2.2.4
 )
