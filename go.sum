@@ -173,6 +173,8 @@ github.com/mattn/go-colorable v0.0.9/go.mod h1:9vuHe8Xs5qXnSaW/c/ABM9alt+Vo+STaO
 github.com/mattn/go-colorable v0.1.4 h1:snbPLB8fVfU9iwbbo30TPtbLRzwWu6aJS6Xh4eaaviA=
 github.com/mattn/go-colorable v0.1.4/go.mod h1:U0ppj6V5qS13XJ6of8GYAs25YV2eR4EVcfRqFIhoBtE=
 github.com/mattn/go-isatty v0.0.3/go.mod h1:M+lRXTBqGeGNdLjl/ufCoiOlB5xdOkqRJdNxMWT7Zi4=
+github.com/mattn/go-isatty v0.0.8/go.mod h1:Iq45c/XA43vh69/j3iqttzPXn0bhXyGjM0Hdxcsrc5s=
+github.com/mattn/go-isatty v0.0.10/go.mod h1:qgIWMr58cqv1PHHyhnkY9lrL7etaEgOFcMEpPG5Rm84=
 github.com/matttproud/golang_protobuf_extensions v1.0.1/go.mod h1:D8He9yQNgCq6Z5Ld7szi9bcBfOoFv/3dc6xSMkL2PC0=
 github.com/mitchellh/cli v1.0.0/go.mod h1:hNIlj7HEI86fIcpObd7a0FcrxTWetlwJDGcceTlRvqc=
 github.com/mitchellh/copystructure v1.0.0/go.mod h1:SNtv71yrdKgLRyLFxmLdkAbkKEFWgYaq1OVrnRcwhnw=
@@ -251,8 +253,11 @@ github.com/xordataexchange/crypt v0.0.3-0.20170626215501-b2862e3d0a77/go.mod h1:
 github.com/yahoo/athenz v1.8.31/go.mod h1:5p1/T3n45DT6IICiDgsG//9Sf0DR3iGESoMq5jVybrQ=
 github.com/yahoo/athenz v1.8.32 h1:cE36hdfKRJHT/RSydBrxXQ94mrMx5UV3pVtiizTvWcQ=
 github.com/yahoo/athenz v1.8.32/go.mod h1:VXoOPNbzHBTGR3EpSRFRGHIzpnuwlb/bdcVOTOCLRX4=
+github.com/yahoo/athenz v1.8.33/go.mod h1:bGC4PzHUQRC2byuyYqnKYofHCsGLPWSNoAWorW+juTc=
 github.com/yahoo/athenz v1.8.36 h1:cXNoj9gMSBZaNQrtYYC8ylbHfwmK16i6MN5+kn5bsEg=
 github.com/yahoo/athenz v1.8.36/go.mod h1:bGC4PzHUQRC2byuyYqnKYofHCsGLPWSNoAWorW+juTc=
+github.com/yahoo/athenz v1.8.37 h1:Y2NvSeHHlbUgOMJ9U3zzkzBcemhtGp3C+epM8oqXnB0=
+github.com/yahoo/athenz v1.8.37/go.mod h1:bGC4PzHUQRC2byuyYqnKYofHCsGLPWSNoAWorW+juTc=
 github.com/yahoojapan/athenz-authorizer/v2 v2.1.0 h1:zYz8l+b4dAKyBpPJP2aklMfkW80HBd1wCeVD6JDbdMQ=
 github.com/yahoojapan/athenz-authorizer/v2 v2.1.0/go.mod h1:V6tSmwdnV7FcTsyhzv1h69EZT8NH4BL7JI6g90Eyybg=
 github.com/yahoojapan/athenz-authorizer/v2 v2.1.1 h1:V6Rdv5p7ZUBdD2R1UqwCSLMWxWyllJRQ2gcsM8Ztsos=
