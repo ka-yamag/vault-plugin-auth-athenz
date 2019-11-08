@@ -27,7 +27,6 @@ case "${unameOut}" in
   Darwin*)
     SHA256_PREFIX="shasum -a 256";;
     # PLUGIN_DIR="/private/tmp/vault/plugin"
-    # CONFIG_FILE_PATH="${GOPATH}/src/ghe.corp.yahoo.co.jp/katyamag/vault-plugin-auth-athenz/athenz_plugin.yaml"
 
     # if [ ! -e $PLUGIN_DIR ]; then
     #   mkdir -p $PLUGIN_DIR
