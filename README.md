@@ -28,7 +28,7 @@
 
 ### Install plugin
 ```
-$ go get ghe.corp.yahoo.co.jp/katyamag/vault-plugin-auth-athenz/cmd/vault-plugin-auth-athenz
+$ go get github.com/katyamag/vault-plugin-auth-athenz/cmd/vault-plugin-auth-athenz
 ```
 
 ### Prepare vault server(minimun settings)
