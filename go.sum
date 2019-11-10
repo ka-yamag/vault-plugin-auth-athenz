@@ -256,6 +256,8 @@ github.com/yahoo/athenz v1.8.32/go.mod h1:VXoOPNbzHBTGR3EpSRFRGHIzpnuwlb/bdcVOTO
 github.com/yahoo/athenz v1.8.33/go.mod h1:bGC4PzHUQRC2byuyYqnKYofHCsGLPWSNoAWorW+juTc=
 github.com/yahoo/athenz v1.8.36 h1:cXNoj9gMSBZaNQrtYYC8ylbHfwmK16i6MN5+kn5bsEg=
 github.com/yahoo/athenz v1.8.36/go.mod h1:bGC4PzHUQRC2byuyYqnKYofHCsGLPWSNoAWorW+juTc=
+github.com/yahoo/athenz v1.8.37 h1:Y2NvSeHHlbUgOMJ9U3zzkzBcemhtGp3C+epM8oqXnB0=
+github.com/yahoo/athenz v1.8.37/go.mod h1:bGC4PzHUQRC2byuyYqnKYofHCsGLPWSNoAWorW+juTc=
 github.com/yahoojapan/athenz-authorizer/v2 v2.1.0 h1:zYz8l+b4dAKyBpPJP2aklMfkW80HBd1wCeVD6JDbdMQ=
 github.com/yahoojapan/athenz-authorizer/v2 v2.1.0/go.mod h1:V6tSmwdnV7FcTsyhzv1h69EZT8NH4BL7JI6g90Eyybg=
 github.com/yahoojapan/athenz-authorizer/v2 v2.1.1 h1:V6Rdv5p7ZUBdD2R1UqwCSLMWxWyllJRQ2gcsM8Ztsos=
