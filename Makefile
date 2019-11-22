@@ -13,13 +13,13 @@ GOFMT_FILE?=$$(find . -name "*.go" | grep -v vendor)
 GO := $(shell command -v go 2> /dev/null)
 
 ifdef GO
-GO_VER_GTEQ11 := $(shell expr `go version | cut -f 3 -d' ' | cut -f2 -d.` \>= 11)
+GO_VER_GTEQ11 := $(shell expr `go version | cut -f 3 -d' ' | cut -f2 -d.` \>= 12)
 ifneq "$(GO_VER_GTEQ11)" "1"
 all:
-	@echo "Please install 1.11.x or newer version of golang"
+	@echo "Please install 1.12.x or newer version of golang"
 else
-.PHONY: mod fmt test linux darwin
-all: mod fmt test linux darwin
+.PHONY: pkg fmt test linux darwin
+all: pkg fmt test linux darwin
 endif
 
 else
@@ -29,14 +29,16 @@ all:
 
 endif
 
-mod:
-	go mod tidy
+pkg:
+	go get -v -t -d ./...
 
 fmt:
 	gofmt -l .
 
-test: mod fmt
+test: pkg fmt
 	go test --race -v ./...
+
+build: darwin linux
 
 darwin:
 	@echo "Building darwin client..."
