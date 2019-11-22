@@ -1,4 +1,4 @@
-name: Go
+name: vault-athenz-auth-plugin
 on: [push, pull_request]
 jobs:
 
@@ -24,5 +24,8 @@ jobs:
             dep ensure
         fi
 
-    - name: Build and test
-      run: make
+    - name: test
+      run: make test
+
+    - name: build
+      run: make build
