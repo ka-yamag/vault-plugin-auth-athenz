@@ -104,12 +104,12 @@ sha256     xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
 ### Configuration
- 1. Configure user with athenz principal that are allowed to authenticate
+1. Configure user with athenz principal that are allowed to authenticate
 ```
 $ vault write auth/athenz/clients/hoge name=hoge role=vault_client_role
 ```
 
- 2. login with athenz n-token
+2. login with athenz n-token
 ```
 $ vault write auth/athenz/login name=hoge token=$NTOKEN
 ```
