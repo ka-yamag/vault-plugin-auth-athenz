@@ -6,21 +6,15 @@
 
 
 - [Overview](#overview)
-- [How to use](#how-to-use)
   - [Install plugin](#install-plugin)
   - [Prepare vault server(minimun settings)](#prepare-vault-serverminimun-settings)
   - [Register the plugin to Vault](#register-the-plugin-to-vault)
-  - [Enable the plugin](#enable-the-plugin)
+  - [Enable plugin](#enable-plugin)
   - [Check plugins](#check-plugins)
-  - [Prepare athenz roletoken](#prepare-athenz-roletoken)
   - [Configuration](#configuration)
   - [Disable and Delete plugin](#disable-and-delete-plugin)
 - [Athenz Auth Method (API)](#athenz-auth-method-api)
   - [Create Athenz Role Entry for Vault](#create-athenz-role-entry-for-vault)
-  - [Login with Athenz Method](#login-with-athenz-method)
-  - [Read Athenz Role Entry](#read-athenz-role-entry)
-  - [List Athenz Role Entry](#list-athenz-role-entry)
-- [TODO](#todo)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -80,7 +74,7 @@ $ SHA256=$(shasum -a 256 "${PLUGIN_DIR}" | cut -d' ' -f1)
 $ vault plugin register -sha256=$SHA256 -args="${PLUGIN_CONF_FILE}" -command=vault-plugin-auth-athenz athenz
 ```
 
-# Enable plugin
+### Enable plugin
 __NOTE: If you don't set the `--options`, this plugin reads the config file from default path `/etc/vault/plugin/athenz_plugin.yaml`.__
 ```
 $ vault auth enable \
@@ -110,12 +104,12 @@ sha256     xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
 ### Configuration
-1. Configure user with athenz principal that are allowed to authenticate
+ 1. Configure user with athenz principal that are allowed to authenticate
 ```
 $ vault write auth/athenz/clients/hoge name=hoge role=vault_client_role
 ```
 
-2. login with athenz n-token
+ 2. login with athenz n-token
 ```
 $ vault write auth/athenz/login name=hoge token=$NTOKEN
 ```
