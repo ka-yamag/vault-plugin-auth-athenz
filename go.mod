@@ -11,6 +11,6 @@ require (
 	github.com/stretchr/testify v1.4.0
 	github.com/yahoo/athenz v1.8.37
 	github.com/yahoojapan/athenz-authorizer/v2 v2.1.1
-	go.uber.org/zap v1.12.0
+	go.uber.org/zap v1.13.0
 	gopkg.in/yaml.v2 v2.2.7
 )
