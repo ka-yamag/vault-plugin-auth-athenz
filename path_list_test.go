@@ -71,3 +71,20 @@ func TestClientPath_Listing(t *testing.T) {
 		t.Fatalf("bad: listed users: expected %#v actual: %#v", expected, resp.Data["keys"].([]string))
 	}
 }
+
+func TestClientPath_ListFailure(t *testing.T) {
+	b, storage, removeFunc := getBackend(t)
+	defer removeFunc()
+
+	_, err := b.HandleRequest(context.Background(), &logical.Request{
+		Path:      "clients/invalid",
+		Operation: logical.ListOperation,
+		Storage:   storage,
+	})
+
+	expected := "unsupported operation"
+
+	if err.Error() != expected {
+		t.Fatalf("bad: expected %#v actual: %#v", expected, err.Error())
+	}
+}
