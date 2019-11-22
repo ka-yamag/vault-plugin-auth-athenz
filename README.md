@@ -29,93 +29,101 @@ $ go get github.com/katyamag/vault-plugin-auth-athenz/cmd/vault-plugin-auth-athe
 ### Prepare vault server(minimun settings)
 
 **NOTE: Set the `api_addr` to your vault config**
+```
+$ VAULT_PLUGIN_PATH="/private/tmp/vault-plugins"
 
-    $ VAULT_PLUGIN_PATH="/private/tmp/vault-plugins"
+$ cat<< EOF | tee /tmp/vault.hcl
+log_level = "DEBUG"
+api_addr = "http://127.0.0.1:8200"
+plugin_directory = "${VAULT_PLUGIN_PATH}"
+disable_mlock = true
 
-    $ cat<< EOF | tee /tmp/vault.hcl
-    log_level = "DEBUG"
-    api_addr = "http://127.0.0.1:8200"
-    plugin_directory = "${VAULT_PLUGIN_PATH}"
-    disable_mlock = true
+storage "inmem" {}
 
-    storage "inmem" {}
-
-    listener "tcp" {
-      address       = "127.0.0.1:8200"
-      tls_disable = 1
-    }
-    EOF
+listener "tcp" {
+  address       = "127.0.0.1:8200"
+  tls_disable = 1
+}
+EOF
+```
 
 Create the config for athenz.
+```
+$ ATHENZ_URL="https://localhost:4443/zts/v1"
+$ ASSERTION_RESOURCE="vault"
+$ ASSERTION_ACTION="access"
 
-    $ ATHENZ_URL="https://localhost:4443/zts/v1"
-    $ ASSERTION_RESOURCE="vault"
-    $ ASSERTION_ACTION="access"
-
-    $ cat<<EOF | tee /tmp/vault/plugin/plugin_config.yaml
-    ---
-    athenz:
-      url: ${ATHENZ_URL}
-      policyrhRefreshDuratuon: 6h
-      hdr: Athenz-Principal-Auth
-      domain: sample.domain
-      policy:
-        resource: ${ASSERTION_RESOURCE}
-        action: ${ASSERTION_ACTION}
-    EOF
+$ cat<<EOF | tee /tmp/vault/plugin/plugin_config.yaml
+---
+athenz:
+  url: ${ATHENZ_URL}
+  policyrhRefreshDuratuon: 6h
+  hdr: Athenz-Principal-Auth
+  domain: sample.domain
+  policy:
+    resource: ${ASSERTION_RESOURCE}
+    action: ${ASSERTION_ACTION}
+EOF
+```
 
 ### Register the plugin to Vault
+```
+$ PLUGIN_DIR=$(which vault-plugin-auth-athenz)
+$ PLUGIN_CONF_FILE="/tmp/vault/plugin/plugin_conf.yaml"
 
-    $ PLUGIN_DIR=$(which vault-plugin-auth-athenz)
-    $ PLUGIN_CONF_FILE="/tmp/vault/plugin/plugin_conf.yaml"
-
-    $ SHA256=$(shasum -a 256 "${PLUGIN_DIR}" | cut -d' ' -f1)
-    $ vault plugin register -sha256=$SHA256 -args="${PLUGIN_CONF_FILE}" -command=vault-plugin-auth-athenz athenz
+$ SHA256=$(shasum -a 256 "${PLUGIN_DIR}" | cut -d' ' -f1)
+$ vault plugin register -sha256=$SHA256 -args="${PLUGIN_CONF_FILE}" -command=vault-plugin-auth-athenz athenz
+```
 
 ### Enable plugin
 
 **NOTE: If you don't set the `--options`, this plugin reads the config file from default path `/etc/vault/plugin/athenz_plugin.yaml`.**
-
-    $ vault auth enable \
-    -path=athenz \
-    -plugin-name=athenz \
-    -options="--config-file=${PLUGIN_CONF_FILE}" \
-    plugin
+```
+$ vault auth enable \
+-path=athenz \
+-plugin-name=athenz \
+-options="--config-file=${PLUGIN_CONF_FILE}" \
+plugin
+```
 
 ### Check plugins
+```
+$ vault auth list
+Path       Type      Accessor                Description
+----       ----      --------                -----------
+athenz/    athenz    auth_athenz_9fd2cac8    n/a
+cert/      cert      auth_cert_e990af0b      n/a
+token/     token     auth_token_9420f044     token based credentials
 
-    $ vault auth list
-    Path       Type      Accessor                Description
-    ----       ----      --------                -----------
-    athenz/    athenz    auth_athenz_9fd2cac8    n/a
-    cert/      cert      auth_cert_e990af0b      n/a
-    token/     token     auth_token_9420f044     token based credentials
-
-    $ vault read /sys/plugins/catalog/auth/athenz
-    Key        Value
-    ---        -----
-    args       []
-    builtin    false
-    command    vault-plugin-auth-athenz
-    name       athenz
-    sha256     xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+$ vault read /sys/plugins/catalog/auth/athenz
+Key        Value
+---        -----
+args       []
+builtin    false
+command    vault-plugin-auth-athenz
+name       athenz
+sha256     xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+```
 
 ### Configuration
 
 1.  Configure user with athenz principal that are allowed to authenticate
 
-
-    $ vault write auth/athenz/clients/hoge name=hoge role=vault_client_role
+```
+$ vault write auth/athenz/clients/hoge name=hoge role=vault_client_role
+```
 
 2.  login with athenz n-token
 
-
-    $ vault write auth/athenz/login name=hoge token=$NTOKEN
+```
+$ vault write auth/athenz/login name=hoge token=$NTOKEN
+```
 
 ### Disable and Delete plugin
-
-    $ vault auth disable athenz
-    $ vault delete /sys/plugins/catalog/auth/athenz
+```
+$ vault auth disable athenz
+$ vault delete /sys/plugins/catalog/auth/athenz
+```
 
 ## Athenz Auth Method (API)
 
@@ -136,5 +144,6 @@ Create the config for athenz.
 
 * * *
 
-    $ vault write auth/athenz/clients/hoge \
-    roletoken=$ROLE_TOKEN \
+```
+$ vault write auth/athenz/clients/hoge token=$ROLE_TOKEN role=test-role
+```
