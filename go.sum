@@ -257,6 +257,8 @@ github.com/yahoo/athenz v1.8.41 h1:tthXz2uzyCQX0qej8eR5pDsQnBVwewdaP86giv4t9YM=
 github.com/yahoo/athenz v1.8.41/go.mod h1:zxWh0gZef6KGjH7+cHHWouyKmElR3jPx78or6S1Ep5Y=
 github.com/yahoo/athenz v1.8.42 h1:hPp9gVMCu2vLYJ2zbqcULzRvVV3b0vdqJHNNVPQJO9Q=
 github.com/yahoo/athenz v1.8.42/go.mod h1:zxWh0gZef6KGjH7+cHHWouyKmElR3jPx78or6S1Ep5Y=
+github.com/yahoo/athenz v1.8.48 h1:CWbcjHLcsbQBtXKvA0koWWSHvnH5N5AudfX0vl83BfQ=
+github.com/yahoo/athenz v1.8.48/go.mod h1:G7LLFUH7Z/r4QAB7FfudfuA7Am/eCzO1GlzBhDL6Kv0=
 github.com/yahoojapan/athenz-authorizer/v2 v2.1.2 h1:jMUG5TMOpa3vfRg6Q4GxbRGXJZhEXIVovo7v4uakZb0=
 github.com/yahoojapan/athenz-authorizer/v2 v2.1.2/go.mod h1:lxBtaNhHgRXdqSZMunsDLBVCJv11FaVQ1/9lWhzFr90=
 go.etcd.io/bbolt v1.3.2/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=
@@ -365,6 +367,7 @@ gopkg.in/natefinch/lumberjack.v2 v2.0.0/go.mod h1:l0ndWWf7gzL7RNwBG7wST/UCcT4T24
 gopkg.in/resty.v1 v1.12.0/go.mod h1:mDo4pnntr5jdWRML875a/NmxYqAlA73dVijT2AXvQQo=
 gopkg.in/square/go-jose.v2 v2.3.1 h1:SK5KegNXmKmqE342YYN2qPHEnUYeoMiXXl1poUlI+o4=
 gopkg.in/square/go-jose.v2 v2.3.1/go.mod h1:M9dMgbHiYLoDGQrXy7OpJDJWiKiU//h+vD76mk0e1AI=
+gopkg.in/square/go-jose.v2 v2.4.1/go.mod h1:M9dMgbHiYLoDGQrXy7OpJDJWiKiU//h+vD76mk0e1AI=
 gopkg.in/yaml.v2 v2.0.0-20170812160011-eb3733d160e7/go.mod h1:JAlM8MvJe8wmxCU4Bli9HhUf9+ttbYbLASfIpnQbh74=
 gopkg.in/yaml.v2 v2.2.1/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=
 gopkg.in/yaml.v2 v2.2.2/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=
