@@ -1,0 +1,14 @@
+version: 2
+updates:
+- package-ecosystem: gomod
+  directory: "/"
+  schedule:
+    interval: daily
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: github.com/yahoo/athenz
+    versions:
+    - 1.9.30
+  - dependency-name: github.com/hashicorp/go-hclog
+    versions:
+    - 0.15.0
