@@ -9,7 +9,7 @@ require (
 	github.com/hashicorp/vault/sdk v0.1.14-0.20190909201848-e0fbf9b652e2
 	github.com/stretchr/testify v1.5.1
 	github.com/yahoo/athenz v1.8.55
-	github.com/yahoojapan/athenz-authorizer/v2 v2.1.2
+	github.com/yahoojapan/athenz-authorizer/v2 v2.2.0
 	go.uber.org/zap v1.14.1
 	gopkg.in/yaml.v2 v2.3.0
 )
