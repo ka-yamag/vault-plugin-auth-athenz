@@ -3,7 +3,7 @@
 # Prerequisite: Go development environment
 #
 
-GOPKGNAME = github.com/katyamag/vault-plugin-auth-athenz
+GOPKGNAME = github.com/ka-yamag/vault-plugin-auth-athenz
 PKG_DATE=$(shell date '+%Y-%m-%dT%H:%M:%S')
 BINARY=vault-plugin-auth-athenz
 SRC=./cmd/vault-plugin-auth-athenz/main.go
@@ -28,9 +28,6 @@ all:
 	@echo "go is not available please install golang"
 
 endif
-
-pkg:
-	go get -v -t -d ./...
 
 fmt:
 	gofmt -l .

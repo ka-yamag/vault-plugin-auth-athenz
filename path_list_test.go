@@ -1,4 +1,4 @@
-package athenzauth
+package main
 
 import (
 	"context"

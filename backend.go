@@ -1,4 +1,4 @@
-package athenzauth
+package main
 
 import (
 	"context"
@@ -7,8 +7,8 @@ import (
 
 	"github.com/hashicorp/vault/sdk/framework"
 	"github.com/hashicorp/vault/sdk/logical"
-	"github.com/katyamag/vault-plugin-auth-athenz/pkg/athenz"
-	"github.com/katyamag/vault-plugin-auth-athenz/pkg/config"
+	"github.com/ka-yamag/vault-plugin-auth-athenz/internal/athenz"
+	"github.com/ka-yamag/vault-plugin-auth-athenz/internal/config"
 )
 
 const (
@@ -34,8 +34,8 @@ type athenzAuthBackend struct {
 	updaterCtxCancel context.CancelFunc
 }
 
-// Factory is used by framework
-func Factory(ctx context.Context, c *logical.BackendConfig) (logical.Backend, error) {
+// factory is used by framework
+func factory(ctx context.Context, c *logical.BackendConfig) (logical.Backend, error) {
 	if p, ok := c.Config["--config-file"]; ok {
 		confPath = p
 	}

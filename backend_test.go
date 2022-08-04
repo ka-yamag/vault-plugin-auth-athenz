@@ -1,4 +1,4 @@
-package athenzauth
+package main
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 	hlog "github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/vault/sdk/helper/logging"
 	"github.com/hashicorp/vault/sdk/logical"
-	"github.com/katyamag/vault-plugin-auth-athenz/pkg/athenz"
+	"github.com/ka-yamag/vault-plugin-auth-athenz/internal/athenz"
 )
 
 const (
@@ -126,7 +126,7 @@ func TestFactory_CreateFailure(t *testing.T) {
 				StorageView: &logical.InmemStorage{},
 			}
 
-			_, actual := Factory(context.Background(), backendConfig)
+			_, actual := factory(context.Background(), backendConfig)
 			if actual != nil && actual.Error() != tt.expectedErr {
 				t.Errorf("Factory() actual = %v, expected = %v", actual, tt.expectedErr)
 				return

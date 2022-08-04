@@ -7,8 +7,8 @@ import (
 	"net/url"
 	"regexp"
 
-	"github.com/katyamag/vault-plugin-auth-athenz/pkg/config"
-	"github.com/katyamag/vault-plugin-auth-athenz/pkg/logger"
+	"github.com/ka-yamag/vault-plugin-auth-athenz/internal/config"
+	"github.com/ka-yamag/vault-plugin-auth-athenz/internal/logger"
 	"github.com/yahoo/athenz/clients/go/zts"
 	authorizerd "github.com/yahoojapan/athenz-authorizer/v2"
 )

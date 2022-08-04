@@ -1,4 +1,4 @@
-package athenzauth
+package main
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 
 	"github.com/hashicorp/vault/sdk/framework"
 	"github.com/hashicorp/vault/sdk/logical"
-	"github.com/katyamag/vault-plugin-auth-athenz/pkg/athenz"
+	"github.com/ka-yamag/vault-plugin-auth-athenz/internal/athenz"
 )
 
 func pathLogin(b *athenzAuthBackend) *framework.Path {

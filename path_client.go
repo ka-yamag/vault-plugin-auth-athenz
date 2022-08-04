@@ -1,4 +1,4 @@
-package athenzauth
+package main
 
 import (
 	"context"
@@ -10,13 +10,9 @@ import (
 	"github.com/hashicorp/vault/sdk/framework"
 	"github.com/hashicorp/vault/sdk/helper/tokenutil"
 	"github.com/hashicorp/vault/sdk/logical"
-	"github.com/katyamag/vault-plugin-auth-athenz/pkg/logger"
 )
 
-var (
-	log       = logger.GetLogger()
-	roleRegxp = regexp.MustCompile(`^([a-zA-Z0-9_][a-zA-Z0-9_-]*)(\.[a-zA-Z0-9_][a-zA-Z0-9_-]*)*$`)
-)
+var roleRegxp = regexp.MustCompile(`^([a-zA-Z0-9_][a-zA-Z0-9_-]*)(\.[a-zA-Z0-9_][a-zA-Z0-9_-]*)*$`)
 
 const pathPrefix = "clients/"
 
