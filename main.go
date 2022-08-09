@@ -10,18 +10,14 @@ import (
 
 func main() {
 	apiClientMeta := &api.PluginAPIClientMeta{}
-	// TODO: need?
-	flags := apiClientMeta.FlagSet()
-	flags.Parse(os.Args[1:])
 
 	tlsConfig := apiClientMeta.GetTLSConfig()
 	tlsProviderFunc := api.VaultPluginTLSProvider(tlsConfig)
 
-	err := plugin.Serve(&plugin.ServeOpts{
+	if err := plugin.Serve(&plugin.ServeOpts{
 		BackendFactoryFunc: factory,
 		TLSProviderFunc:    tlsProviderFunc,
-	})
-	if err != nil {
+	}); err != nil {
 		log.Println(err)
 		os.Exit(1)
 	}

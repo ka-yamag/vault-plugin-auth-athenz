@@ -5,9 +5,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func TestNewConfig(t *testing.T) {
@@ -69,8 +68,12 @@ athenz:
 
 		conf, actualErr := NewConfig(test.path)
 		if actualErr != nil {
-			assert.Equal(t, test.err.Error(), actualErr.Error())
+			if test.err.Error() != actualErr.Error() {
+				t.Errorf("expect doesn't match: actual: %v, expect: %v", test.err, actualErr)
+			}
 		}
-		assert.Exactly(t, test.expected, conf)
+		if !reflect.DeepEqual(test.expected, conf) {
+			t.Errorf("expect doesn't match: actual: %v, expect: %v", test.expected, conf)
+		}
 	}
 }

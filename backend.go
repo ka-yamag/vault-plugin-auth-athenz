@@ -2,105 +2,117 @@ package main
 
 import (
 	"context"
-	"errors"
+	"fmt"
+	"log"
+	"net/http"
 	"sync"
 
 	"github.com/hashicorp/vault/sdk/framework"
 	"github.com/hashicorp/vault/sdk/logical"
-	"github.com/ka-yamag/vault-plugin-auth-athenz/internal/athenz"
-	"github.com/ka-yamag/vault-plugin-auth-athenz/internal/config"
+	authorizerd "github.com/yahoojapan/athenz-authorizer/v5"
 )
 
 const (
 	backendHelp = `
 The "athenz" credential provider allows authentication using Athenz.
 `
-	defaultConfigPath = "/etc/vault/plugin/athenz_plugin.yaml"
+	// defaultConfigPath = "/etc/vault/plugin/athenz_plugin.yaml"
 )
 
-var confPath = ""
+// var confPath = ""
 
 // SetConfigPath sets the config file path for athenz updator daemon
 // func SetConfigPath(path string) {
 //   confPath = path
 // }
 
-type athenzAuthBackend struct {
+type backend struct {
 	*framework.Backend
 
-	l *sync.RWMutex
+	athenzAuthorizerd authorizerd.Authorizerd
+	httpClient        *http.Client
+
+	roleMutex sync.Mutex
 
 	updaterCtx       context.Context
 	updaterCtxCancel context.CancelFunc
 }
 
 // factory is used by framework
-func factory(ctx context.Context, c *logical.BackendConfig) (logical.Backend, error) {
-	if p, ok := c.Config["--config-file"]; ok {
-		confPath = p
-	}
-	if confPath == "" {
-		return nil, errors.New("athenz config path not set")
-	}
+func factory(ctx context.Context, conf *logical.BackendConfig) (logical.Backend, error) {
+	// if p, ok := c.Config["--config-file"]; ok {
+	//   confPath = p
+	// }
+	// if confPath == "" {
+	//   return nil, errors.New("athenz config path not set")
+	// }
 
-	b, err := backend()
+	b, err := Backend()
 	if err != nil {
 		return nil, err
 	}
 
-	if err := b.Setup(ctx, c); err != nil {
+	if err := b.Setup(ctx, conf); err != nil {
 		return nil, err
 	}
 	return b, nil
 }
 
-func backend() (*athenzAuthBackend, error) {
-	var b athenzAuthBackend
+func Backend() (*backend, error) {
+	b := &backend{}
 	b.updaterCtx, b.updaterCtxCancel = context.WithCancel(context.Background())
 
-	conf, err := config.NewConfig(confPath)
+	// TODO: from config
+	daemon, err := authorizerd.New(
+		authorizerd.WithAthenzURL("apj.zts.athenz.yahoo.co.jp:4443/zts/v1"),
+		authorizerd.WithAthenzDomains("yby.katyamag"),
+		authorizerd.WithPubkeyRefreshPeriod("1h"),
+		authorizerd.WithPolicyRefreshPeriod("5m"),
+	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("athenz authorizer daemon new error: %v", err)
 	}
 
-	if err := athenz.NewValidator(conf.Athenz); err != nil {
-		return nil, err
+	if err := daemon.Init(b.updaterCtx); err != nil {
+		return nil, fmt.Errorf("athenz authorizer daemon init error: %v", err)
 	}
 
-	// Initialize validator
-	if err := athenz.GetValidator().Init(b.updaterCtx); err != nil {
-		return nil, err
-	}
-
-	// Start validator
-	athenz.GetValidator().Start(b.updaterCtx)
+	errs := daemon.Start(b.updaterCtx)
+	go func() {
+		for err := range errs {
+			log.Printf("athenz authorizer daemon start error: %v", err)
+		}
+	}()
+	b.athenzAuthorizerd = daemon
 
 	b.Backend = &framework.Backend{
-		Help:        backendHelp,
-		BackendType: logical.TypeCredential,
+		Help: backendHelp,
 		// AuthRenew:   b.pathAuthRenew,
 		PathsSpecial: &logical.Paths{
-			Unauthenticated: []string{"login"},
+			Unauthenticated: []string{
+				"login",
+			},
 		},
 		Paths: framework.PathAppend(
 			[]*framework.Path{
-				pathConfigClient(&b),
-				pathLogin(&b),
-				pathListClients(&b),
+				b.pathRole(),
+				b.pathListRole(),
+				b.pathLogin(),
 			},
 		),
-		Clean: b.cleanup,
+		BackendType: logical.TypeCredential,
+		Clean:       b.cleanup,
 	}
 
-	b.l = &sync.RWMutex{}
+	b.roleMutex = sync.Mutex{}
 
-	return &b, nil
+	return b, nil
 }
 
-func (b *athenzAuthBackend) cleanup(_ context.Context) {
-	b.l.Lock()
+func (b *backend) cleanup(_ context.Context) {
+	b.roleMutex.Lock()
 	if b.updaterCtxCancel != nil {
 		b.updaterCtxCancel()
 	}
-	b.l.Unlock()
+	b.roleMutex.Unlock()
 }
