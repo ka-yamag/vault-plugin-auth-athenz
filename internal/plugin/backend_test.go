@@ -1,4 +1,4 @@
-package main
+package plugin
 
 // import (
 //   "context"
@@ -22,9 +22,6 @@ package main
 //   pubkeyRefreshDuration: 2m
 //   policyRefreshDuration: 6h
 //   domain: sample.domain
-//   policy:
-//     resource: vault
-//     action: access
 // `
 
 //   invalidConfig = `---
@@ -34,9 +31,6 @@ package main
 //   pubkeyRefreshDuration: 2m
 //   policyRefreshDuration: 6h
 //   domain: sample.domain
-//   policy:
-//     resource: vault
-//     action: access
 // `
 
 //   invalidAthenzParamConfig = `---

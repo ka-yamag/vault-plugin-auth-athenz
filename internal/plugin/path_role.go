@@ -1,4 +1,4 @@
-package main
+package plugin
 
 import (
 	"context"
@@ -10,15 +10,22 @@ import (
 	"github.com/hashicorp/vault/sdk/logical"
 )
 
+const (
+	defaultAthenzPolicyAction   = "access"
+	defaultAthenzPolicyResource = "vault_login"
+)
+
 type athenzRoleEntry struct {
 	tokenutil.TokenParams
 
-	Role string
+	AthenzRole           string `json:"athenz_role"`
+	AthenzPolicyAction   string `json:"athenz_policy_action"`
+	AthenzPolicyResource string `json:"athenz_policy_resource"`
 
 	// Deprecated: These are superceded by TokenUtil
 	// TTL      time.Duration
 	// MaxTTL   time.Duration
-	Policies []string
+	Policies []string `json:"policies"`
 }
 
 func (a *athenzRoleEntry) ToResponseData() map[string]interface{} {
@@ -59,9 +66,19 @@ func (b *backend) pathRole() *framework.Path {
 				Description: "Name of the role in vault.",
 			},
 
-			"role": {
+			"athenz_role": {
 				Type:        framework.TypeString,
 				Description: "Name of the athenz role.",
+			},
+
+			"athenz_policy_action": {
+				Type:        framework.TypeString,
+				Description: "Name of the athenz policy action.",
+			},
+
+			"athenz_policy_resource": {
+				Type:        framework.TypeString,
+				Description: "Name of the athenz policy resource.",
 			},
 
 			"policies": {
@@ -109,19 +126,31 @@ func (b *backend) pathRoleCreateUpdate(ctx context.Context, req *logical.Request
 		return logical.ErrorResponse("name must be set"), nil
 	}
 
-	roleName := strings.ToLower(data.Get("role").(string))
-	if roleName == "" {
+	athenzRoleName := strings.ToLower(data.Get("athenz_role").(string))
+	if athenzRoleName == "" {
 		return logical.ErrorResponse("missing athenz role name"), nil
 	}
 
-	roleEntry, err := b.athenzRole(ctx, req.Storage, roleName)
+	roleEntry, err := b.athenzRole(ctx, req.Storage, athenzRoleName)
 	if err != nil {
 		return nil, err
 	}
 	if roleEntry == nil {
 		roleEntry = &athenzRoleEntry{
-			Role: roleName,
+			AthenzRole: athenzRoleName,
 		}
+	}
+
+	if athenzPolicyAction, ok := data.GetOk("athenz_policy_action"); ok {
+		roleEntry.AthenzPolicyAction = athenzPolicyAction.(string)
+	} else {
+		roleEntry.AthenzPolicyAction = defaultAthenzPolicyAction
+	}
+
+	if athenzPolicyResource, ok := data.GetOk("athenz_policy_resource"); ok {
+		roleEntry.AthenzPolicyResource = athenzPolicyResource.(string)
+	} else {
+		roleEntry.AthenzPolicyResource = defaultAthenzPolicyResource
 	}
 
 	if err := tokenutil.UpgradeValue(data, "policies", "token_policies", &roleEntry.Policies, &roleEntry.TokenPolicies); err != nil {
@@ -162,7 +191,7 @@ func (b *backend) athenzRole(ctx context.Context, s logical.Storage, roleName st
 }
 
 func (b *backend) pathRoleRead(ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
-	entry, err := b.athenzRole(ctx, req.Storage, strings.ToLower(data.Get("role").(string)))
+	entry, err := b.athenzRole(ctx, req.Storage, strings.ToLower(data.Get("name").(string)))
 	if err != nil {
 		return nil, err
 	}
@@ -176,15 +205,15 @@ func (b *backend) pathRoleRead(ctx context.Context, req *logical.Request, data *
 }
 
 func (b *backend) pathRoleDelete(ctx context.Context, req *logical.Request, data *framework.FieldData) (*logical.Response, error) {
-	roleName := data.Get("role").(string)
-	if roleName == "" {
-		return logical.ErrorResponse("missing role name"), nil
+	name := data.Get("name").(string)
+	if name == "" {
+		return logical.ErrorResponse("name must be set"), nil
 	}
 
 	b.roleMutex.Lock()
 	defer b.roleMutex.Unlock()
 
-	if err := req.Storage.Delete(ctx, "role/"+strings.ToLower(roleName)); err != nil {
+	if err := req.Storage.Delete(ctx, "role/"+strings.ToLower(name)); err != nil {
 		return nil, fmt.Errorf("error deleting role: %w", err)
 	}
 

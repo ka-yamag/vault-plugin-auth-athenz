@@ -1,4 +1,4 @@
-package main
+package plugin
 
 import (
 	"context"
@@ -17,14 +17,11 @@ const (
 The "athenz" credential provider allows authentication using Athenz.
 `
 	// defaultConfigPath = "/etc/vault/plugin/athenz_plugin.yaml"
+	defaultAthenzZtsEndpoint              = "tmp.athrenz.com/zts/v1"
+	defaultAthenzDomain                   = "tmp.domain"
+	defaultAuthorizerdPubkeyRefreshPeriod = "24h"
+	defaultAuthorizerdPolicyRefreshPeriod = "10h"
 )
-
-// var confPath = ""
-
-// SetConfigPath sets the config file path for athenz updator daemon
-// func SetConfigPath(path string) {
-//   confPath = path
-// }
 
 type backend struct {
 	*framework.Backend
@@ -38,16 +35,14 @@ type backend struct {
 	updaterCtxCancel context.CancelFunc
 }
 
-// factory is used by framework
-func factory(ctx context.Context, conf *logical.BackendConfig) (logical.Backend, error) {
-	// if p, ok := c.Config["--config-file"]; ok {
-	//   confPath = p
-	// }
-	// if confPath == "" {
-	//   return nil, errors.New("athenz config path not set")
-	// }
+// Factory is used by framework
+func Factory(ctx context.Context, conf *logical.BackendConfig) (logical.Backend, error) {
+	var athenzConfPath string
+	if path, ok := conf.Config["--athenz-config-file"]; ok {
+		athenzConfPath = path
+	}
 
-	b, err := Backend()
+	b, err := Backend(athenzConfPath)
 	if err != nil {
 		return nil, err
 	}
@@ -58,14 +53,14 @@ func factory(ctx context.Context, conf *logical.BackendConfig) (logical.Backend,
 	return b, nil
 }
 
-func Backend() (*backend, error) {
+func Backend(athenzConfPath string) (*backend, error) {
 	b := &backend{}
 	b.updaterCtx, b.updaterCtxCancel = context.WithCancel(context.Background())
 
 	// TODO: from config
 	daemon, err := authorizerd.New(
-		authorizerd.WithAthenzURL("apj.zts.athenz.yahoo.co.jp:4443/zts/v1"),
-		authorizerd.WithAthenzDomains("yby.katyamag"),
+		authorizerd.WithAthenzURL(defaultAthenzZtsEndpoint),
+		authorizerd.WithAthenzDomains(defaultAthenzDomain),
 		authorizerd.WithPubkeyRefreshPeriod("1h"),
 		authorizerd.WithPolicyRefreshPeriod("5m"),
 	)
