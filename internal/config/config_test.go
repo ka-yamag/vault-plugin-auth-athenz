@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -11,7 +10,7 @@ import (
 
 func TestNewConfig(t *testing.T) {
 	// Create directory to place configuration files
-	tmpDir, _ := ioutil.TempDir("", "test")
+	tmpDir, _ := os.MkdirTemp("", "test")
 	defer func() {
 		err := os.RemoveAll(tmpDir)
 		if err != nil {
@@ -29,24 +28,17 @@ func TestNewConfig(t *testing.T) {
 		{
 			data: `---
 athenz:
-  url: localhost:4443/zts/v1
+  ztsURL: localhost:4443/zts/v1
   pubkeyRefreshDuration: 2m
   policyRefreshDuration: 6h
-  domain: sample.domain
-  policy:
-    resource: vault
-    action: access
+  providerDomain: sample.domain
 `,
 			path: configPath,
 			expected: &Config{
 				Athenz: Athenz{
-					URL:                   "localhost:4443/zts/v1",
+					ZtsURL:                "localhost:4443/zts/v1",
 					PolicyRefreshDuration: "6h",
-					Domain:                "sample.domain",
-					Policy: Policy{
-						Resource: "vault",
-						Action:   "access",
-					},
+					ProviderDomain:        "sample.domain",
 				},
 			},
 			err: nil,
@@ -64,7 +56,7 @@ athenz:
 
 	for _, test := range tests {
 		// Prepare for a test configuration file
-		ioutil.WriteFile(configPath, []byte(test.data), 0644)
+		os.WriteFile(configPath, []byte(test.data), 0644)
 
 		conf, actualErr := NewConfig(test.path)
 		if actualErr != nil {
