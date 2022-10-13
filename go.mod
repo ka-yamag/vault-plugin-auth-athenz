@@ -3,8 +3,8 @@ module github.com/ka-yamag/vault-plugin-auth-athenz
 go 1.18
 
 require (
-	github.com/hashicorp/vault/api v1.0.2
-	github.com/hashicorp/vault/sdk v0.5.3
+	github.com/hashicorp/vault/api v1.8.1
+	github.com/hashicorp/vault/sdk v0.6.0
 	github.com/yahoojapan/athenz-authorizer/v5 v5.3.3
 	gopkg.in/yaml.v2 v2.4.0
 )
@@ -14,6 +14,7 @@ require (
 	github.com/ardielle/ardielle-go v1.5.2 // indirect
 	github.com/armon/go-metrics v0.4.0 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
+	github.com/cenkalti/backoff/v3 v3.0.0 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1 // indirect
 	github.com/evanphx/json-patch/v5 v5.6.0 // indirect
 	github.com/fatih/color v1.13.0 // indirect
@@ -26,7 +27,7 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-hclog v1.2.2 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
-	github.com/hashicorp/go-kms-wrapping/entropy v0.1.0 // indirect
+	github.com/hashicorp/go-kms-wrapping/entropy/v2 v2.0.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-plugin v1.4.4 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.1 // indirect
