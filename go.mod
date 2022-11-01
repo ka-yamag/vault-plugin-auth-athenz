@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/hashicorp/vault/api v1.0.2
-	github.com/hashicorp/vault/sdk v0.5.3
+	github.com/hashicorp/vault/sdk v0.6.1
 	github.com/yahoojapan/athenz-authorizer/v5 v5.3.3
 	gopkg.in/yaml.v2 v2.4.0
 )
@@ -26,9 +26,9 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-hclog v1.2.2 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
-	github.com/hashicorp/go-kms-wrapping/entropy v0.1.0 // indirect
+	github.com/hashicorp/go-kms-wrapping/entropy/v2 v2.0.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
-	github.com/hashicorp/go-plugin v1.4.4 // indirect
+	github.com/hashicorp/go-plugin v1.4.5 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.1 // indirect
 	github.com/hashicorp/go-rootcerts v1.0.2 // indirect
 	github.com/hashicorp/go-secure-stdlib/mlock v0.1.2 // indirect
