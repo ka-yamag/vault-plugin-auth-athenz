@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/hashicorp/vault/api v1.0.2
 	github.com/hashicorp/vault/sdk v0.5.3
-	github.com/yahoojapan/athenz-authorizer/v5 v5.3.3
+	github.com/yahoojapan/athenz-authorizer/v5 v5.5.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
